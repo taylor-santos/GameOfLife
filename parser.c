@@ -5,7 +5,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include "definitions.h"
-#include "GameState.h"
+#include "GameState.c"
 
 enum EXIT_CODES
 {
@@ -35,27 +35,29 @@ void parse(FILE *input, struct GameState *state)
 				for (int x = 0; x < FIELD_WIDTH; x++) {
 					char c = buffer[18 + 2 * (FIELD_WIDTH*y + x)];
 					if (c == '0') {
-						state->field[x][y] = 0;
+						state->field[x + y * FIELD_WIDTH] = 0;
+						state->count0++;
 						for (int Y = y - 1; Y <= y + 1; Y++) {
 							for (int X = x - 1; X <= x + 1; X++) {
 								if ((X != x || Y != y) && X >= 0 && X < FIELD_WIDTH && Y >= 0 && Y < FIELD_HEIGHT) {
-									state->adj_count0[X][Y]++;
+									state->adj_count0[X + Y*FIELD_WIDTH]++;
 								}
 							}
 						}
 					}
 					else if (c == '1') {
-						state->field[x][y] = 1;
+						state->field[x + y * FIELD_WIDTH] = 1;
+						state->count1++;
 						for (int Y = y - 1; Y <= y + 1; Y++) {
 							for (int X = x - 1; X <= x + 1; X++) {
 								if ((X != x || Y != y) && X >= 0 && X < FIELD_WIDTH && Y >= 0 && Y < FIELD_HEIGHT) {
-									state->adj_count1[X][Y]++;
+									state->adj_count1[X + Y*FIELD_WIDTH]++;
 								}
 							}
 						}
 					}
 					else {
-						state->field[x][y] = -1;
+						state->field[x + y * FIELD_WIDTH] = -1;
 					}
 				}
 			}
