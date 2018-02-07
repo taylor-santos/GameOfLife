@@ -1,3 +1,6 @@
+#ifndef PARSER
+#define PARSER
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -68,3 +71,5 @@ void parse(FILE *input, struct GameState *state)
 		exit(BAD_DATA);
 	}
 }
+
+#endif

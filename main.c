@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include "definitions.h"
 #include "GameState.h"
+#include "parser.c"
 
 struct GameState *instantiate_state() 
 {
@@ -37,7 +38,43 @@ int main()
 {
 	struct GameState *state = instantiate_state();
 	parse(stdin, state);
-	while (1) {
+	for (int i=0; i<10; i++){
+		for (int y = 0; y < FIELD_HEIGHT; y++) {
+			for (int x = 0; x < FIELD_WIDTH; x++) {
+				int adj = state->adj_count0[x][y] + state->adj_count1[x][y];
+				if (state->field[x][y] != -1) {
+					if (adj < 2 || adj > 3)
+						printf("O");
+					else
+						printf("O");
+				}
+				else {
+					if (adj == 3)
+						printf(" ");
+					else
+						printf(" ");
+				}
+			}
+			printf("   ");
+			for (int x = 0; x < FIELD_WIDTH; x++) {
+				int adj = state->adj_count0[x][y] + state->adj_count1[x][y];
+				if (adj == 1){
+					printf("%c",'░');
+				}else if (adj == 2){
+					printf("%c",177);
+				}else if (adj == 3){
+					printf("%c",178);
+				}else if (adj >= 4){
+					printf("%c", 219);
+				}else{
+					printf(" ");
+				}
+			}
+			printf("\n");
+		}
+		printf("------\n");
+
+
 		int **changed = malloc(sizeof(*changed) * FIELD_WIDTH);
 		for (int x = 0; x < FIELD_WIDTH; x++) {
 			changed[x] = calloc(sizeof(*(changed[x])), FIELD_HEIGHT);
@@ -59,42 +96,45 @@ int main()
 				}
 				else {
 					if (state->adj_count0[x][y] + state->adj_count1[x][y] < 2) {
+						if (state->field[x][y] == 0)
+							changed[x][y] = -1;
+						else 
+							changed[x][y] = -2;
 						state->field[x][y] = -1;
-						changed[x][y] = -1;
 					}
 					else if (state->adj_count0[x][y] + state->adj_count1[x][y] > 3) {
+						if (state->field[x][y] == 0)
+							changed[x][y] = -1;
+						else 
+							changed[x][y] = -2;
 						state->field[x][y] = -1;
-						changed[x][y] = -1;
 					}
 				}
 			}
 		}
 		for (int y = 0; y < FIELD_HEIGHT; y++) {
 			for (int x = 0; x < FIELD_WIDTH; x++) {
-				int change0 = 0;
 				for (int Y = y - 1; Y <= y + 1; Y++) {
 					for (int X = x - 1; X <= x + 1; X++) {
-						if ((X != x || Y != y) && X >= 0 && X < FIELD_WIDTH && Y >= 0 && Y < FIELD_HEIGHT) {
-							change += changed[X][Y];
+						if ((X != x || Y != y) && 
+							X >= 0 && 
+							X < FIELD_WIDTH && 
+							Y >= 0 && 
+							Y < FIELD_HEIGHT) {
+							int change = changed[X][Y];
+							if (change == -2)
+								state->adj_count1[x][y]--;
+							else if (change == -1)
+								state->adj_count0[x][y]--;
+							else if (change == 1)
+								state->adj_count0[x][y]++;
+							else if (change == 2)
+								state->adj_count1[x][y]++;
 						}
 					}
 				}
-				state->adj_count0
 			}
 		}
-
-		for (int y = 0; y < FIELD_HEIGHT; y++) {
-			for (int x = 0; x < FIELD_WIDTH; x++) {
-				if (state->field[x][y] != -1) {
-					printf("%d", state->field[x][y]);
-				}
-				else {
-					printf(" ");
-				}
-			}
-			printf("\n");
-		}
-		printf("------\n");
 	}
 	clear_state(&state);
 	return 0;
