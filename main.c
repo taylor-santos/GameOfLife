@@ -1,9 +1,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include "definitions.h"
-#include "GameState.c"
-#include "parser.c"
-#include "bot.c"
+#include "GameState.h"
+#include "parser.h"
+#include "bot.h"
 
 int main()
 {

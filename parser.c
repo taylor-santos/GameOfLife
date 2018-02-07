@@ -5,7 +5,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include "definitions.h"
-#include "GameState.c"
+#include "GameState.h"
 
 enum EXIT_CODES
 {

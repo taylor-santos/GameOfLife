@@ -1,21 +1,11 @@
 #ifndef GAMESTATE
 #define GAMESTATE
 
+#include "GameState.h"
 #include "definitions.h"
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-
-struct GameState
-{
-	int timebank;
-	int round;
-	int your_botid;
-	int count0;
-	int count1;
-	int *field;
-	int *adj_count0;
-	int *adj_count1;
-};
 
 struct GameState *instantiate_state() 
 {
