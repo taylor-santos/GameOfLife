@@ -4,6 +4,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <time.h>
 #include "definitions.h"
 #include "GameState.h"
 #include "bot.h";
@@ -27,7 +28,13 @@ void parse(FILE *input, struct GameState *state)
 	if (strstr(buffer, "action") != NULL) {
 		print_field(state);
 		state->timebank = atoi(buffer + 12);
+		clock_t t;
+		t = clock();
 		int move = calculate_move(state);
+		t = clock() - t;
+		double ms = ((double)t) / CLOCKS_PER_SEC * 1000;
+		fprintf(stderr, "Time taken: %fms\n", ms);
+		
 		if (move == -1) {
 			printf("pass\n");
 		}else{
