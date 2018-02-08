@@ -40,6 +40,7 @@ void parse(FILE *input, struct GameState *state)
 		}else{
 			int x = move % FIELD_WIDTH;
 			int y = move / FIELD_WIDTH;
+			fprintf(stderr, "Best move: kill %d,%d\n", x, y);
 			printf("kill %d,%d\n", x, y);
 		}
 	}
