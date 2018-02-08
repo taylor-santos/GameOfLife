@@ -6,6 +6,7 @@
 #include <string.h>
 #include "definitions.h"
 #include "GameState.h"
+#include "bot.h";
 
 enum EXIT_CODES
 {
@@ -24,7 +25,16 @@ void parse(FILE *input, struct GameState *state)
 		exit(BAD_DATA);
 	}
 	if (strstr(buffer, "action") != NULL) {
+		print_field(state);
 		state->timebank = atoi(buffer + 12);
+		int move = calculate_move(state);
+		if (move == -1) {
+			printf("pass\n");
+		}else{
+			int x = move % FIELD_WIDTH;
+			int y = move / FIELD_WIDTH;
+			printf("kill %d,%d\n", x, y);
+		}
 	}
 	else if (strstr(buffer, "update") != NULL) {
 		if (strstr(buffer, "round") != NULL) {
