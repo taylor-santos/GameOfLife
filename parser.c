@@ -36,12 +36,12 @@ void parse(FILE *input, struct GameState *state)
 		fprintf(stderr, "Time taken: %fms\n", ms);
 		
 		if (move == -1) {
-			printf("pass\n");
+			fprintf(stdout, "pass\n");
 		}else{
 			int x = move % FIELD_WIDTH;
 			int y = move / FIELD_WIDTH;
 			fprintf(stderr, "Best move: kill %d,%d\n", x, y);
-			printf("kill %d,%d\n", x, y);
+			fprintf(stdout, "kill %d,%d\n", x, y);
 		}
 	}
 	else if (strstr(buffer, "update") != NULL) {
