@@ -9,12 +9,6 @@
 #include "GameState.h"
 #include "bot.h"
 
-enum EXIT_CODES
-{
-	INVALID_POINTER = -1,
-	BAD_DATA = -2
-};
-
 void parse(FILE *input, struct GameState *state)
 {
 	char buffer[BUFFER_SIZE];
@@ -30,7 +24,9 @@ void parse(FILE *input, struct GameState *state)
 		print_field(state);
 		state->timebank = atoi(buffer + 12);
 		t = clock();
-		int* move = calculate_move(state);
+		struct GameState *new_state = instantiate_state();
+		int* move = calculate_move(state, new_state, 2);
+		clear_state(&new_state);
 
 		if (move[0] == 0) {
 			fprintf(stderr, "Best move: pass\n");
@@ -55,10 +51,11 @@ void parse(FILE *input, struct GameState *state)
 			fprintf(stderr, "Best move: birth %d,%d %d,%d %d,%d\n", ix, iy, jx, jy, kx, ky);
 			fprintf(stdout, "birth %d,%d %d,%d %d,%d\n", ix, iy, jx, jy, kx, ky);
 		}
+		free(move);
 		fflush(stdout);
 		t = clock() - t;
 		double ms = ((double)t) / CLOCKS_PER_SEC * 1000;
-		fprintf(stderr, "Time taken: %fms\n", ms);
+		fprintf(stderr, "Time taken: %dms\n", (int)ms);
 	}
 	else if (strstr(buffer, "update") != NULL) {
 		if (strstr(buffer, "round") != NULL) {

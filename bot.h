@@ -3,7 +3,8 @@
 
 #include "GameState.h"
 
-int *calculate_move(struct GameState *state);
-void simulate(struct GameState *state, struct GameState *result);
+int minimax(struct GameState *state, int depth);
+int *calculate_move(struct GameState *state, struct GameState *new_state, int depth);
+void simulate(const struct GameState *state, struct GameState *result);
 
 #endif

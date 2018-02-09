@@ -16,9 +16,9 @@ struct GameState
 struct GameState *instantiate_state();
 void clear_cell(struct GameState *state, int x, int y);
 void set_cell(struct GameState *state, int x, int y, int player);
-struct GameState *copy(struct GameState *state);
-void copy_into(struct GameState *src, struct GameState *dst);
+struct GameState *copy(const struct GameState *state);
+void copy_into(const struct GameState *src, struct GameState *dst);
 void clear_state(struct GameState **state);
-void print_field(struct GameState *state);
+void print_field(const struct GameState *state);
 
 #endif

@@ -50,6 +50,9 @@ void clear_cell(struct GameState *state, int x, int y) {
 }
 
 void set_cell(struct GameState *state, int x, int y, int player) {
+	if (x < 0 || x >= FIELD_WIDTH || y < 0 || y >= FIELD_HEIGHT) {
+		exit(BAD_DATA);
+	}
 	if (state->field[x + y * FIELD_WIDTH] != player) {
 		if (state->field[x + y * FIELD_WIDTH] != -1) {
 			clear_cell(state, x, y);
@@ -77,7 +80,7 @@ void set_cell(struct GameState *state, int x, int y, int player) {
 	}
 }
 
-struct GameState *copy(struct GameState *state){
+struct GameState *copy(const struct GameState *state){
 	struct GameState *new_state = malloc(sizeof(*new_state));
 	new_state->timebank = state->timebank;
 	new_state->round = state->round;
@@ -85,23 +88,27 @@ struct GameState *copy(struct GameState *state){
 	new_state->count0 = state->count0;
 	new_state->count1 = state->count1;
 	new_state->field = malloc(sizeof(*(new_state->field)) * FIELD_WIDTH * FIELD_HEIGHT);
-	memcpy(new_state->field, state->field, sizeof(*(state->field)) * FIELD_WIDTH * FIELD_HEIGHT);
 	new_state->adj_count0 = malloc(sizeof(*(new_state->adj_count0)) * FIELD_WIDTH * FIELD_HEIGHT);
-	memcpy(new_state->adj_count0, state->adj_count0, sizeof(*(state->adj_count1)) * FIELD_WIDTH * FIELD_HEIGHT);
 	new_state->adj_count1 = malloc(sizeof(*(new_state->adj_count1)) * FIELD_WIDTH * FIELD_HEIGHT);
-	memcpy(new_state->adj_count1, state->adj_count1, sizeof(*(state->adj_count1)) * FIELD_WIDTH * FIELD_HEIGHT);
+	for (int i = 0; i < FIELD_WIDTH*FIELD_HEIGHT; i++) {
+		new_state->field[i] = state->field[i];
+		new_state->adj_count0[i] = state->adj_count0[i];
+		new_state->adj_count1[i] = state->adj_count1[i];
+	}
 	return new_state;
 }
 
-void copy_into(struct GameState *src, struct GameState *dst) {
+void copy_into(const struct GameState *src, struct GameState *dst) {
 	dst->timebank = src->timebank;
 	dst->round = src->round;
 	dst->your_botid = src->your_botid;
 	dst->count0 = src->count0;
 	dst->count1 = src->count1;
-	memcpy(dst->field,      src->field,      sizeof(*(src->field))      * FIELD_WIDTH * FIELD_HEIGHT);
-	memcpy(dst->adj_count0, src->adj_count0, sizeof(*(src->adj_count1)) * FIELD_WIDTH * FIELD_HEIGHT);
-	memcpy(dst->adj_count1, src->adj_count1, sizeof(*(src->adj_count1)) * FIELD_WIDTH * FIELD_HEIGHT);
+	for (int i = 0; i < FIELD_WIDTH*FIELD_HEIGHT; i++) {
+		dst->field[i] = src->field[i];
+		dst->adj_count0[i] = src->adj_count0[i];
+		dst->adj_count1[i] = src->adj_count1[i];
+	}
 }
 
 void clear_state(struct GameState **state)
@@ -113,7 +120,7 @@ void clear_state(struct GameState **state)
 	*state = NULL;
 }
 
-void print_field(struct GameState *state){
+void print_field(const struct GameState *state){
 	fprintf(stderr, "%d-%d\n", state->count0, state->count1);
 	for (int y = 0; y < FIELD_HEIGHT; y++) {
 			for (int x = 0; x < FIELD_WIDTH; x++) {
