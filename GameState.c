@@ -7,6 +7,39 @@
 #include <stdlib.h>
 #include <string.h>
 
+struct FastState *instantiate_fastState()
+{
+	struct FastState *state = malloc(sizeof(*state));
+	state->timebank = 10000;
+	state->round = 0;
+	state->count0 = 0;
+	state->count1 = 0;
+	state->your_botid = 0;
+	state->field = calloc(sizeof(*(state->field)), (FIELD_WIDTH + 2) * (FIELD_HEIGHT + 2));
+	return state;
+}
+
+void print_fast(struct FastState *state)
+{
+	fprintf(stderr, "%d-%d\n", state->count0, state->count1);
+	for (int y = 0; y < FIELD_HEIGHT; y++) {
+		for (int x = 0; x < FIELD_WIDTH; x++) {
+			int owner = (state->field[(x+1) + (y+1) * FIELD_WIDTH] / 81) % 3;
+			if (owner == 1) {
+				fprintf(stderr, "0");
+			}
+			else if (owner == 2) {
+				fprintf(stderr, "1");
+			}
+			else {
+				fprintf(stderr, ".");
+			}
+		}
+		fprintf(stderr,"\n");
+	}
+	fprintf(stderr,"------\n");
+}
+
 struct GameState *instantiate_state() 
 {
 	struct GameState *state = malloc(sizeof(*state));

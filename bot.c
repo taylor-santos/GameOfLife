@@ -7,6 +7,7 @@
 #include "bot.h"
 #include "GameState.h"
 #include "definitions.h"
+#include "table.h"
 
 int minimax(struct GameState *state, int depth) {
 	if (depth <= 0) {
@@ -212,6 +213,43 @@ int *calculate_move(struct GameState *state, struct GameState *new_state, int de
 		ret[3] = best_move_birth[2];
 		return ret;
 	}
+}
+
+void simulate_fast(struct FastState *state){
+	int *new_field = calloc(sizeof(*new_field), (FIELD_WIDTH+1) * (FIELD_HEIGHT+1));
+	for (int y=0; y<FIELD_HEIGHT; y++){
+		for (int x=0; x<FIELD_WIDTH; x++){
+			int index = x + y*FIELD_WIDTH;
+			int curr = state->field[(x+1) + (y+1)*FIELD_WIDTH];
+			short *table_ptr = table[curr];
+			switch(*(table_ptr+9)){
+				case -2:
+					state->count1--;
+					break;
+				case -1:
+					state->count0--;
+					break;
+				case 1:
+					state->count0++;
+					break;
+				case 2:
+					state->count1++;
+					break;
+			}
+			for (int Y=y-1; Y<=y+1; Y++){
+				for (int X=x-1; X<=x+1; X++){
+					new_field[(X+1) + (Y+1)*FIELD_WIDTH] += *(table_ptr++);
+				}
+			}
+			
+		}
+	}
+	for (int y=0; y<FIELD_HEIGHT; y++){
+		for (int x=0; x<FIELD_WIDTH; x++){
+			state->field[(x+1) + (y+1)*FIELD_WIDTH] = new_field[(x+1) + (y+1)*FIELD_WIDTH];
+		}
+	}
+	free(new_field);
 }
 
 void simulate(const struct GameState *state, struct GameState *result) {
