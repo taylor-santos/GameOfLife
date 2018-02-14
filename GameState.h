@@ -1,6 +1,7 @@
 #ifndef GAMESTATE_H
 #define GAMESTATE_H
 
+#include <stdbool.h>
 #include "definitions.h"
 
 struct FastState
@@ -15,6 +16,8 @@ struct FastState
 };
 
 struct FastState *instantiate_fastState();
-void print_fast(struct FastState *state);
+void print_fast(const struct FastState *state);
+struct FastState *copy_fastState(const struct FastState *state, const bool copy_changes);
+void set_cell(struct FastState *state, const unsigned short index, const unsigned char value);
 
 #endif
