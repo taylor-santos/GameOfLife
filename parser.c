@@ -8,8 +8,9 @@
 #include "definitions.h"
 #include "GameState.h"
 #include "bot.h"
+#include "data.h"
 
-void parse(FILE *input, struct GameState *state)
+void parse(FILE *input, struct FastState *state)
 {
 	char buffer[BUFFER_SIZE];
 	for (int i = 0; i<BUFFER_SIZE; i++) {
@@ -21,37 +22,10 @@ void parse(FILE *input, struct GameState *state)
 	}
 	if (strstr(buffer, "action") != NULL) {
 		clock_t t;
-		print_field(state);
+		print_fast(state);
 		state->timebank = atoi(buffer + 12);
 		t = clock();
-		struct GameState *new_state = instantiate_state();
-		int* move = calculate_move(state, new_state, 2);
-		clear_state(&new_state);
-
-		if (move[0] == 0) {
-			fprintf(stderr, "Best move: pass\n");
-			fprintf(stdout, "pass\n");
-		}
-		else if (move[0] == 1) {
-			int x = move[1] % FIELD_WIDTH;
-			int y = move[1] / FIELD_WIDTH;
-			fprintf(stderr, "Best move: kill %d,%d\n", x, y);
-			fprintf(stdout, "kill %d,%d\n", x, y);
-		}
-		else {
-			int i = move[1];
-			int ix = i % FIELD_WIDTH;
-			int iy = i / FIELD_WIDTH;
-			int j = move[2];
-			int jx = j % FIELD_WIDTH;
-			int jy = j / FIELD_WIDTH;
-			int k = move[3];
-			int kx = k % FIELD_WIDTH;
-			int ky = k / FIELD_WIDTH;
-			fprintf(stderr, "Best move: birth %d,%d %d,%d %d,%d\n", ix, iy, jx, jy, kx, ky);
-			fprintf(stdout, "birth %d,%d %d,%d %d,%d\n", ix, iy, jx, jy, kx, ky);
-		}
-		free(move);
+		
 		fflush(stdout);
 		t = clock() - t;
 		double ms = ((double)t) / CLOCKS_PER_SEC * 1000;
@@ -64,37 +38,46 @@ void parse(FILE *input, struct GameState *state)
 		else if (strstr(buffer, "field") != NULL) {
 			state->count0 = 0;
 			state->count1 = 0;
-			for (int i = 0; i < FIELD_WIDTH*FIELD_HEIGHT; i++) {
-				state->adj_count0[i] = 0;
-				state->adj_count1[i] = 0;
-			}
 			for (int y = 0; y < FIELD_HEIGHT; y++) {
 				for (int x = 0; x < FIELD_WIDTH; x++) {
 					char c = buffer[18 + 2 * (FIELD_WIDTH*y + x)];
 					if (c == '0') {
-						state->field[x + y * FIELD_WIDTH] = 0;
 						state->count0++;
+						state->field[(x + 1) + (y + 1)*(FIELD_WIDTH + 2)] += 1;
+						int mul = 3;
 						for (int Y = y - 1; Y <= y + 1; Y++) {
 							for (int X = x - 1; X <= x + 1; X++) {
-								if ((X != x || Y != y) && X >= 0 && X < FIELD_WIDTH && Y >= 0 && Y < FIELD_HEIGHT) {
-									state->adj_count0[X + Y*FIELD_WIDTH]++;
+								if (Y != y || X != x) {
+									state->field[(X + 1) + (Y + 1)*(FIELD_WIDTH + 2)] += mul;
+									mul *= 3;
 								}
 							}
 						}
+						unsigned short m = mask[y];
+						if (x > 0)
+							state->changed[x - 1] |= m;
+						state->changed[x] |= m;
+						if (x < FIELD_WIDTH - 1)
+							state->changed[x + 1] |= m;
 					}
 					else if (c == '1') {
-						state->field[x + y * FIELD_WIDTH] = 1;
 						state->count1++;
+						state->field[(x + 1) + (y + 1)*(FIELD_WIDTH + 2)] += 2;
+						int mul = 3;
 						for (int Y = y - 1; Y <= y + 1; Y++) {
 							for (int X = x - 1; X <= x + 1; X++) {
-								if ((X != x || Y != y) && X >= 0 && X < FIELD_WIDTH && Y >= 0 && Y < FIELD_HEIGHT) {
-									state->adj_count1[X + Y*FIELD_WIDTH]++;
+								if (Y != y || X != x) {
+									state->field[(X + 1) + (Y + 1)*(FIELD_WIDTH + 2)] += 2 * mul;
+									mul *= 3;
 								}
 							}
 						}
-					}
-					else {
-						state->field[x + y * FIELD_WIDTH] = -1;
+						unsigned short m = mask[y];
+						if (x > 0)
+							state->changed[x - 1] |= m;
+						state->changed[x] |= m;
+						if (x < FIELD_WIDTH - 1)
+							state->changed[x + 1] |= m;
 					}
 				}
 			}

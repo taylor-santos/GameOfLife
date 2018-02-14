@@ -5,6 +5,6 @@
 
 enum EXIT_CODES;
 
-void parse(FILE *input, struct GameState *state);
+void parse(FILE *input, struct FastState *state);
 
 #endif
