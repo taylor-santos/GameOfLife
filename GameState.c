@@ -11,14 +11,20 @@
 struct FastState *instantiate_fastState()
 {
 	struct FastState *state = malloc(sizeof(*state));
-	state->timebank = 10000;
-	state->round = 0;
 	state->count0 = 0;
 	state->count1 = 0;
 	state->your_botid = 0;
 	state->field = calloc(sizeof(*(state->field)), (FIELD_WIDTH + 2) * (FIELD_HEIGHT + 2));
 	state->changed = calloc(sizeof(*(state->changed)), FIELD_WIDTH);
 	return state;
+}
+
+void free_fastState(struct FastState **state)
+{
+	free((*state)->field);
+	free((*state)->changed);
+	free(*state);
+	*state = NULL;
 }
 
 void print_fast(const struct FastState *state)
@@ -29,13 +35,13 @@ void print_fast(const struct FastState *state)
 		for (int x = 0; x < FIELD_WIDTH; x++) {
 			int owner = state->field[(x+1) + (y+1) * (FIELD_WIDTH+2)] % 3;
 			if (owner == 1) {
-				fprintf(stderr, "0");
+				fprintf(stderr, "%c",177);
 			}
 			else if (owner == 2) {
-				fprintf(stderr, "1");
+				fprintf(stderr, "%c",178);
 			}
 			else {
-				fprintf(stderr, ".");
+				fprintf(stderr, "%c", 176);
 			}
 		}
 		
@@ -51,10 +57,8 @@ void print_fast(const struct FastState *state)
 	fprintf(stderr,"------\n");
 }
 
-struct FastState *copy_fastState(const struct FastState *state, _Bool copy_changes){
+struct FastState *copy_fastState(const struct FastState *state, const bool copy_changes){
 	struct FastState *new_state = malloc(sizeof(*new_state));
-	new_state->timebank = state->timebank;
-	new_state->round = state->round;
 	new_state->count0 = state->count0;
 	new_state->count1 = state->count1;
 	new_state->your_botid = state->your_botid;
@@ -115,6 +119,28 @@ void set_cell(struct FastState *state, const unsigned short index, const unsigne
 		if (x < FIELD_WIDTH - 1)
 			state->changed[x + 1] |= m;
 	}
+}
+
+bool verify_fastState(const struct FastState *state) {
+	for (int y = 0; y < FIELD_HEIGHT; y++) {
+		for (int x = 0; x < FIELD_WIDTH; x++) {
+			int index = (x + 1) + (y + 1)*(FIELD_WIDTH + 2);
+			int val = state->field[index];
+			int owner = mod3[val];
+			int mul = 3;
+			int new_val = owner;
+			for (int i = 7; i >= 0; i--) {
+				int adj_index = index + adjacent[i];
+				int adj_value = state->field[adj_index];
+				int adj_owner = mod3[adj_value];
+				new_val += adj_owner * mul;
+				mul *= 3;
+			}
+			if (new_val != val)
+				fprintf(stderr, "%d %d %d\n", index, val, new_val);
+		}
+	}
+	return true;
 }
 
 #endif

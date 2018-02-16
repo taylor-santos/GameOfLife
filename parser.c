@@ -23,7 +23,6 @@ void parse(FILE *input, struct FastState *state)
 	if (strstr(buffer, "action") != NULL) {
 		clock_t t;
 		print_fast(state);
-		state->timebank = atoi(buffer + 12);
 		t = clock();
 		
 		fflush(stdout);
@@ -32,47 +31,32 @@ void parse(FILE *input, struct FastState *state)
 		fprintf(stderr, "Time taken: %dms\n", (int)ms);
 	}
 	else if (strstr(buffer, "update") != NULL) {
-		if (strstr(buffer, "round") != NULL) {
-			state->round = atoi(buffer + 18);
-		}
-		else if (strstr(buffer, "field") != NULL) {
+		if (strstr(buffer, "field") != NULL) {
 			state->count0 = 0;
 			state->count1 = 0;
 			for (int y = 0; y < FIELD_HEIGHT; y++) {
 				for (int x = 0; x < FIELD_WIDTH; x++) {
 					char c = buffer[18 + 2 * (FIELD_WIDTH*y + x)];
+					int owner = 0;
 					if (c == '0') {
 						state->count0++;
-						state->field[(x + 1) + (y + 1)*(FIELD_WIDTH + 2)] += 1;
-						int mul = 3;
-						for (int Y = y - 1; Y <= y + 1; Y++) {
-							for (int X = x - 1; X <= x + 1; X++) {
-								if (Y != y || X != x) {
-									state->field[(X + 1) + (Y + 1)*(FIELD_WIDTH + 2)] += mul;
-									mul *= 3;
-								}
-							}
-						}
-						unsigned short m = mask[y];
-						if (x > 0)
-							state->changed[x - 1] |= m;
-						state->changed[x] |= m;
-						if (x < FIELD_WIDTH - 1)
-							state->changed[x + 1] |= m;
+						owner = 1;
 					}
 					else if (c == '1') {
 						state->count1++;
-						state->field[(x + 1) + (y + 1)*(FIELD_WIDTH + 2)] += 2;
+						owner = 2;
+					}
+					if (owner) {
+						//owner += 2; //Change to diff notation
+						int index = (x + 1) + (y + 1)*(FIELD_WIDTH + 2);
+						//const short *mul_ptr = mul + (owner - 1) * 9;
+						state->field[index] += owner;
 						int mul = 3;
-						for (int Y = y - 1; Y <= y + 1; Y++) {
-							for (int X = x - 1; X <= x + 1; X++) {
-								if (Y != y || X != x) {
-									state->field[(X + 1) + (Y + 1)*(FIELD_WIDTH + 2)] += 2 * mul;
-									mul *= 3;
-								}
-							}
+						for (int i = 0; i < 8; i++) {
+							state->field[index + adjacent[i]] += mul * owner;
+							mul *= 3;
 						}
-						unsigned short m = mask[y];
+						const unsigned short m = mask[y];
 						if (x > 0)
 							state->changed[x - 1] |= m;
 						state->changed[x] |= m;
