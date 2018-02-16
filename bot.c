@@ -11,10 +11,14 @@
 #include "definitions.h"
 #include "data.h"
 
-unsigned short *best_move(const struct FastState *state, const unsigned char depth) {
-	if (depth == 0) {
-		short *move = malloc(sizeof(*move));
+short *best_move(const struct FastState *state, const unsigned char depth) {
+	if (depth == 0){
+		short score = (short)(state->count0) - state->count1;
+		if (state->your_botid == 1)
+			score = -score;
+		short *move = malloc(sizeof(*move) * 2);
 		move[0] = 0;
+		move[1] = score;
 		return move;
 	}
 	struct FastState **predictions = malloc(sizeof(*predictions) * depth);
@@ -23,21 +27,51 @@ unsigned short *best_move(const struct FastState *state, const unsigned char dep
 	for (int i = 1; i < depth; i++) {
 		predictions[i] = simulate_fast(predictions[i-1]);
 	}
-	short best_score = -minimax(predictions[0], predictions + 1, depth - 1, SHRT_MIN+1, SHRT_MAX);
+	short alpha = SHRT_MIN + 1;
+	short beta = SHRT_MAX;
+	short best_score = -minimax(predictions[0], predictions + 1, depth - 1, -beta, -alpha);
+	if (best_score > alpha) {
+		alpha = best_score;
+	}
 	short best_kill = -1;
 	for (int y = 0; y<FIELD_HEIGHT; y++) {
 		for (int x = 0; x<FIELD_WIDTH; x++) {
 			unsigned short index = (x + 1) + (y + 1) * (FIELD_WIDTH + 2);
-			if (mod3[state->field[index]] != 0) {
+			if (mod3[state->field[index]] == !state->your_botid + 1) {
 				struct FastState *new_state = copy_fastState(state, true);
 				new_state->your_botid = !state->your_botid;
 				set_cell(new_state, index, 0);
 				struct FastState *next_state = simulate_with_prediction(new_state, predictions[0]);
 				free_fastState(&new_state);
-				int score = -minimax(next_state, predictions + 1, depth - 1, SHRT_MIN+1, SHRT_MAX);
+				int score = -minimax(next_state, predictions + 1, depth - 1, -beta, -alpha);
 				free_fastState(&next_state);
 				if (score > best_score) {
 					best_score = score;
+					best_kill = index;
+				}
+				if (score > alpha) {
+					alpha = score;
+				}
+			}
+		}
+	}
+	for (int y = 0; y<FIELD_HEIGHT; y++) {
+		for (int x = 0; x<FIELD_WIDTH; x++) {
+			unsigned short index = (x + 1) + (y + 1) * (FIELD_WIDTH + 2);
+			if (mod3[state->field[index]] == state->your_botid + 1) {
+				struct FastState *new_state = copy_fastState(state, true);
+				new_state->your_botid = !state->your_botid;
+				set_cell(new_state, index, 0);
+				struct FastState *next_state = simulate_with_prediction(new_state, predictions[0]);
+				free_fastState(&new_state);
+				int score = -minimax(next_state, predictions + 1, depth - 1, -beta, -alpha);
+				free_fastState(&next_state);
+				if (score > best_score) {
+					best_score = score;
+					best_kill = index;
+				}
+				if (score > alpha) {
+					alpha = score;
 				}
 			}
 		}
@@ -47,14 +81,16 @@ unsigned short *best_move(const struct FastState *state, const unsigned char dep
 	}
 	free(predictions);
 	if (best_kill == -1) {
-		short *move = malloc(sizeof(*move));
+		short *move = malloc(sizeof(*move) * 2);
 		move[0] = 0;
+		move[1] = best_score;
 		return move;
 	}
 	else {
-		short *move = malloc(sizeof(*move) * 2);
+		short *move = malloc(sizeof(*move) * 3);
 		move[0] = 1;
-		move[1] = best_kill;
+		move[1] = best_score;
+		move[2] = best_kill;
 		return move;
 	}
 }
@@ -74,7 +110,30 @@ short minimax(const struct FastState *state, const struct FastState **prediction
 	for (int y=0; y<FIELD_HEIGHT; y++){
 		for (int x=0; x<FIELD_WIDTH; x++){
 			unsigned short index = (x + 1) + (y + 1) * (FIELD_WIDTH + 2);
-			if (mod3[state->field[index]] != 0){
+			if (mod3[state->field[index]] == state->your_botid + 1){
+				struct FastState *new_state = copy_fastState(state, true);
+				new_state->your_botid = !state->your_botid;
+				set_cell(new_state, index, 0);
+				next_state = simulate_with_prediction(new_state, predictions[0]);
+				free_fastState(&new_state);
+				int score = -minimax(next_state, predictions+1, depth - 1, -beta, -alpha);
+				free_fastState(&next_state);
+				if (score > best_score) {
+					best_score = score;
+				}
+				if (score > alpha) {
+					alpha = score;
+				}
+				if (beta <= alpha) {
+					return beta;
+				}
+			}
+		}
+	}
+	for (int y=0; y<FIELD_HEIGHT; y++){
+		for (int x=0; x<FIELD_WIDTH; x++){
+			unsigned short index = (x + 1) + (y + 1) * (FIELD_WIDTH + 2);
+			if (mod3[state->field[index]] == !state->your_botid + 1){
 				struct FastState *new_state = copy_fastState(state, true);
 				new_state->your_botid = !state->your_botid;
 				set_cell(new_state, index, 0);

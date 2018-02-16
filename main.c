@@ -11,11 +11,11 @@ int main()
 	struct FastState *state = instantiate_fastState();
 	parse(stdin, state);
 	clock_t time = clock();
-	short* move = best_move(state, 3);
+	short* move = best_move(state, 4);
 	time = clock() - time;
-	fprintf(stderr, "%d\n", move[0]);
+	fprintf(stderr, "%d\n%d\n", move[0], move[1]);
 	if (move[0]) {
-		fprintf(stderr, "%d\n", move[1]);
+		fprintf(stderr, "%d\n", move[2]);
 	}
 	free(move);
 	printf("%f\n", (double)time / CLOCKS_PER_SEC * 1000.0);

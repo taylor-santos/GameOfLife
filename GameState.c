@@ -110,8 +110,8 @@ void set_cell(struct FastState *state, const unsigned short index, const unsigne
 			state->field[index + adjacent[i]] += *mul_ptr;
 			mul_ptr++;
 		}
-		unsigned char x = index % (FIELD_WIDTH + 2) - 1;
-		unsigned char y = index / (FIELD_WIDTH + 2) - 1;
+		unsigned char x = index_to_x[index];
+		unsigned char y = index_to_y[index];
 		const unsigned short m = mask[y];
 		if (x > 0)
 			state->changed[x - 1] |= m;
