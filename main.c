@@ -11,10 +11,16 @@ int main()
 	struct FastState *state = instantiate_fastState();
 	parse(stdin, state);
 	clock_t time = clock();
-	short* move = best_move(state, 4);
+	unsigned char depth = 4;
+	struct FastState **predictions = malloc(sizeof(*predictions) * depth);
+	predictions[0] = simulate_fast(state);
+	for (int i = 1; i < depth; i++) {
+		predictions[i] = simulate_fast(predictions[i - 1]);
+	}
+	short *move = minimax(state, predictions, depth, SHRT_MIN + 1, SHRT_MAX);
 	time = clock() - time;
-	fprintf(stderr, "%d\n%d\n", move[0], move[1]);
-	if (move[0]) {
+	fprintf(stderr, "%d\n%d\n", move[1], -move[0]);
+	if (move[1]) {
 		fprintf(stderr, "%d\n", move[2]);
 	}
 	free(move);
