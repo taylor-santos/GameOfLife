@@ -35,13 +35,16 @@ void print_fast(const struct FastState *state)
 		for (int x = 0; x < FIELD_WIDTH; x++) {
 			int owner = state->field[(x+1) + (y+1) * (FIELD_WIDTH+2)] % 3;
 			if (owner == 1) {
-				fprintf(stderr, "%c",177);
+				//fprintf(stderr, "%c",177);
+				fprintf(stderr, "1");
 			}
 			else if (owner == 2) {
-				fprintf(stderr, "%c",178);
+				//fprintf(stderr, "%c",178);
+				fprintf(stderr, "2");
 			}
 			else {
-				fprintf(stderr, "%c", 176);
+				//fprintf(stderr, "%c", 176);
+				fprintf(stderr, ".");
 			}
 		}
 		
@@ -137,7 +140,7 @@ bool verify_fastState(const struct FastState *state) {
 				mul *= 3;
 			}
 			if (new_val != val)
-				fprintf(stderr, "%d %d %d\n", index, val, new_val);
+				return false;
 		}
 	}
 	return true;

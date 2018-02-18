@@ -10,6 +10,7 @@ int main()
 {
 	struct FastState *state = instantiate_fastState();
 	parse(stdin, state);
+	
 	clock_t time = clock();
 	short* move = best_move(state, 4);
 	time = clock() - time;
@@ -19,6 +20,7 @@ int main()
 	}
 	free(move);
 	printf("%f\n", (double)time / CLOCKS_PER_SEC * 1000.0);
+	
 	/*
 	//print_fast(state);
 	const unsigned short state_count = 600;
