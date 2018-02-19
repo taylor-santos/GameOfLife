@@ -34,9 +34,9 @@ short *minimax(const struct FastState *state, const struct FastState **predictio
 			unsigned short index = (x + 1) + (y + 1) * (FIELD_WIDTH + 2);
 			if (mod3[state->field[index]] == state->your_botid + 1){
 				struct FastState *new_state = copy_fastState(state, true);
-				new_state->your_botid = !state->your_botid;
 				set_cell(new_state, index, 0);
 				next_state = simulate_with_prediction(new_state, predictions[0]);
+				next_state->your_botid = !state->your_botid;
 				free_fastState(&new_state);
 				short *kill_result = minimax(next_state, predictions + 1, depth - 1, -beta, -alpha);
 				short score = -kill_result[0];
@@ -62,9 +62,9 @@ short *minimax(const struct FastState *state, const struct FastState **predictio
 			unsigned short index = (x + 1) + (y + 1) * (FIELD_WIDTH + 2);
 			if (mod3[state->field[index]] == !state->your_botid + 1){
 				struct FastState *new_state = copy_fastState(state, true);
-				new_state->your_botid = !state->your_botid;
 				set_cell(new_state, index, 0);
 				next_state = simulate_with_prediction(new_state, predictions[0]);
+				next_state->your_botid = !state->your_botid;
 				free_fastState(&new_state);
 				short *kill_result = minimax(next_state, predictions + 1, depth - 1, -beta, -alpha);
 				short score = -kill_result[0];
