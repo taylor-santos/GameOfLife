@@ -109,44 +109,79 @@ struct FastState *simulate_fast(const struct FastState *state)
 				unsigned short curr = state->field[index];
 				unsigned char new_owner = *(table + curr);
 				unsigned char old_owner = mod3[curr];
-				char diff = 0;
+				const short *mul_ptr;
+				unsigned short m;
 				if (!old_owner){
 					switch (new_owner) {
 						case 1:
-							new_state->count0++;
-							diff = 3;
-							break;
+						new_state->count0++;
+						mul_ptr = mul + 18;
+						new_state->field[index] += *mul_ptr;
+						mul_ptr++;
+						for (int i = 0; i < 8; i++) {
+							new_state->field[index + adjacent[i]] += *mul_ptr;
+							mul_ptr++;
+						}
+						m = mask[y];
+						if (x > 0)
+							new_state->changed[x - 1] |= m;
+						new_state->changed[x] |= m;
+						if (x < FIELD_WIDTH - 1)
+							new_state->changed[x + 1] |= m;
+						break;
 						case 2:
-							new_state->count1++;
-							diff = 4;
-							break;
+						new_state->count1++;
+						mul_ptr = mul + 27;
+						new_state->field[index] += *mul_ptr;
+						mul_ptr++;
+						for (int i = 0; i < 8; i++) {
+							new_state->field[index + adjacent[i]] += *mul_ptr;
+							mul_ptr++;
+						}
+						m = mask[y];
+						if (x > 0)
+							new_state->changed[x - 1] |= m;
+						new_state->changed[x] |= m;
+						if (x < FIELD_WIDTH - 1)
+							new_state->changed[x + 1] |= m;
+						break;
 					}
 				}
 				else if (!new_owner) {
 					switch (old_owner) {
 						case 1:
-							new_state->count0--;
-							diff = 1;
-							break;
-						case 2:
-							new_state->count1--;
-							diff = 2;
-							break;
-					}
-				}
-				if (diff > 0) {
-					const short *mul_ptr = mul + (diff - 1) * 9;
-					new_state->field[index] += *(mul_ptr++);
-					for (int i = 0; i < 8; i++) {
-						new_state->field[index + adjacent[i]] += *mul_ptr;
+						new_state->count0--;
+						mul_ptr = mul;
+						new_state->field[index] += *mul_ptr;
 						mul_ptr++;
+						for (int i = 0; i < 8; i++) {
+							new_state->field[index + adjacent[i]] += *mul_ptr;
+							mul_ptr++;
+						}
+						m = mask[y];
+						if (x > 0)
+							new_state->changed[x - 1] |= m;
+						new_state->changed[x] |= m;
+						if (x < FIELD_WIDTH - 1)
+							new_state->changed[x + 1] |= m;
+						break;
+						case 2:
+						new_state->count1--;
+						mul_ptr = mul + 9;
+						new_state->field[index] += *mul_ptr;
+						mul_ptr++;
+						for (int i = 0; i < 8; i++) {
+							new_state->field[index + adjacent[i]] += *mul_ptr;
+							mul_ptr++;
+						}
+						m = mask[y];
+						if (x > 0)
+							new_state->changed[x - 1] |= m;
+						new_state->changed[x] |= m;
+						if (x < FIELD_WIDTH - 1)
+							new_state->changed[x + 1] |= m;
+						break;
 					}
-					const unsigned short m = mask[y];
-					if (x > 0)
-						new_state->changed[x - 1] |= m;
-					new_state->changed[x] |= m;
-					if (x < FIELD_WIDTH - 1)
-						new_state->changed[x + 1] |= m;
 				}
 			}
 		}
@@ -161,77 +196,81 @@ struct FastState *simulate_with_prediction(const struct FastState *state, const 
 		for (unsigned char x=0; x<FIELD_WIDTH; x++){
 			if (index_mask[y] & state->changed[x]) {
 				unsigned short index = (x + 1) + (y + 1)*(FIELD_WIDTH + 2);
-				unsigned short curr = state->field[index];
-				unsigned char new_owner = *(table + curr);
-				unsigned char old_owner = mod3[prediction->field[index]];
+				unsigned short old_owner = state->field[index];
+				unsigned char new_owner = *(table + old_owner);
+				unsigned char predicted_new_owner = mod3[prediction->field[index]];
 				const short *mul_ptr;
 				unsigned short m;
-				if (!old_owner){
+				if (!predicted_new_owner){
 					switch (new_owner) {
 						case 1:
-							new_state->count0++;
-							mul_ptr = mul + 18;
-							new_state->field[index] += *(mul_ptr++);
-							for (int i = 0; i < 8; i++) {
-								new_state->field[index + adjacent[i]] += *mul_ptr;
-								mul_ptr++;
-							}
-							m = mask[y];
-							if (x > 0)
-								new_state->changed[x - 1] |= m;
-							new_state->changed[x] |= m;
-							if (x < FIELD_WIDTH - 1)
-								new_state->changed[x + 1] |= m;
-							break;
+						new_state->count0++;
+						mul_ptr = mul + 18;
+						new_state->field[index] += *mul_ptr;
+						mul_ptr++;
+						for (int i = 0; i < 8; i++) {
+							new_state->field[index + adjacent[i]] += *mul_ptr;
+							mul_ptr++;
+						}
+						m = mask[y];
+						if (x > 0)
+							new_state->changed[x - 1] |= m;
+						new_state->changed[x] |= m;
+						if (x < FIELD_WIDTH - 1)
+							new_state->changed[x + 1] |= m;
+						break;
 						case 2:
-							new_state->count1++;
-							mul_ptr = mul + 27;
-							new_state->field[index] += *(mul_ptr++);
-							for (int i = 0; i < 8; i++) {
-								new_state->field[index + adjacent[i]] += *mul_ptr;
-								mul_ptr++;
-							}
-							m = mask[y];
-							if (x > 0)
-								new_state->changed[x - 1] |= m;
-							new_state->changed[x] |= m;
-							if (x < FIELD_WIDTH - 1)
-								new_state->changed[x + 1] |= m;
-							break;
+						new_state->count1++;
+						mul_ptr = mul + 27;
+						new_state->field[index] += *mul_ptr;
+						mul_ptr++;
+						for (int i = 0; i < 8; i++) {
+							new_state->field[index + adjacent[i]] += *mul_ptr;
+							mul_ptr++;
+						}
+						m = mask[y];
+						if (x > 0)
+							new_state->changed[x - 1] |= m;
+						new_state->changed[x] |= m;
+						if (x < FIELD_WIDTH - 1)
+							new_state->changed[x + 1] |= m;
+						break;
 					}
 				}
 				else if (!new_owner) {
-					switch (old_owner) {
+					switch (predicted_new_owner) {
 						case 1:
-							new_state->count0--;
-							mul_ptr = mul;
-							new_state->field[index] += *(mul_ptr++);
-							for (int i = 0; i < 8; i++) {
-								new_state->field[index + adjacent[i]] += *mul_ptr;
-								mul_ptr++;
-							}
-							m = mask[y];
-							if (x > 0)
-								new_state->changed[x - 1] |= m;
-							new_state->changed[x] |= m;
-							if (x < FIELD_WIDTH - 1)
-								new_state->changed[x + 1] |= m;
-							break;
+						new_state->count0--;
+						mul_ptr = mul;
+						new_state->field[index] += *mul_ptr;
+						mul_ptr++;
+						for (int i = 0; i < 8; i++) {
+							new_state->field[index + adjacent[i]] += *mul_ptr;
+							mul_ptr++;
+						}
+						m = mask[y];
+						if (x > 0)
+							new_state->changed[x - 1] |= m;
+						new_state->changed[x] |= m;
+						if (x < FIELD_WIDTH - 1)
+							new_state->changed[x + 1] |= m;
+						break;
 						case 2:
-							new_state->count1--;
-							mul_ptr = mul + 9;
-							new_state->field[index] += *(mul_ptr++);
-							for (int i = 0; i < 8; i++) {
-								new_state->field[index + adjacent[i]] += *mul_ptr;
-								mul_ptr++;
-							}
-							m = mask[y];
-							if (x > 0)
-								new_state->changed[x - 1] |= m;
-							new_state->changed[x] |= m;
-							if (x < FIELD_WIDTH - 1)
-								new_state->changed[x + 1] |= m;
-							break;
+						new_state->count1--;
+						mul_ptr = mul + 9;
+						new_state->field[index] += *mul_ptr;
+						mul_ptr++;
+						for (int i = 0; i < 8; i++) {
+							new_state->field[index + adjacent[i]] += *mul_ptr;
+							mul_ptr++;
+						}
+						m = mask[y];
+						if (x > 0)
+							new_state->changed[x - 1] |= m;
+						new_state->changed[x] |= m;
+						if (x < FIELD_WIDTH - 1)
+							new_state->changed[x + 1] |= m;
+						break;
 					}
 				}
 			}

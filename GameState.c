@@ -35,13 +35,16 @@ void print_fast(const struct FastState *state)
 		for (int x = 0; x < FIELD_WIDTH; x++) {
 			int owner = state->field[(x+1) + (y+1) * (FIELD_WIDTH+2)] % 3;
 			if (owner == 1) {
-				fprintf(stderr, "%c",177);
+				//fprintf(stderr, "%c",177);
+				fprintf(stderr, "0");
 			}
 			else if (owner == 2) {
-				fprintf(stderr, "%c",178);
+				//fprintf(stderr, "%c",178);
+				fprintf(stderr, "1");
 			}
 			else {
-				fprintf(stderr, "%c", 176);
+				//fprintf(stderr, "%c", 176);
+				fprintf(stderr, ".");
 			}
 		}
 		
@@ -75,49 +78,80 @@ struct FastState *copy_fastState(const struct FastState *state, const bool copy_
 
 void set_cell(struct FastState *state, const unsigned short index, const unsigned char value)
 {
-	unsigned char prev = mod3[state->field[index]];
-	if (prev == value)
+	unsigned char old_owner = mod3[state->field[index]];
+	if (old_owner == value)
 		return;
-	char diff = 0;
-	if (!prev){
+	const short *mul_ptr;
+	unsigned short m;
+	char x = index_to_x[index];
+	char y = index_to_y[index];
+	if (!old_owner){
 		switch (value) {
 			case 1:
 				state->count0++;
-				diff = 3;
+				mul_ptr = mul + 18;
+				state->field[index] += *(mul_ptr++);
+				for (int i = 0; i < 8; i++) {
+					state->field[index + adjacent[i]] += *mul_ptr;
+					mul_ptr++;
+				}
+				m = mask[y];
+				if (x > 0)
+					state->changed[x - 1] |= m;
+				state->changed[x] |= m;
+				if (x < FIELD_WIDTH - 1)
+					state->changed[x + 1] |= m;
 				break;
 			case 2:
 				state->count1++;
-				diff = 4;
+				mul_ptr = mul + 27;
+				state->field[index] += *(mul_ptr++);
+				for (int i = 0; i < 8; i++) {
+					state->field[index + adjacent[i]] += *mul_ptr;
+					mul_ptr++;
+				}
+				m = mask[y];
+				if (x > 0)
+					state->changed[x - 1] |= m;
+				state->changed[x] |= m;
+				if (x < FIELD_WIDTH - 1)
+					state->changed[x + 1] |= m;
 				break;
 		}
 	}
 	else if (!value) {
-		switch (prev) {
+		switch (old_owner) {
 			case 1:
 				state->count0--;
-				diff = 1;
+				mul_ptr = mul;
+				state->field[index] += *(mul_ptr++);
+				for (int i = 0; i < 8; i++) {
+					state->field[index + adjacent[i]] += *mul_ptr;
+					mul_ptr++;
+				}
+				m = mask[y];
+				if (x > 0)
+					state->changed[x - 1] |= m;
+				state->changed[x] |= m;
+				if (x < FIELD_WIDTH - 1)
+					state->changed[x + 1] |= m;
 				break;
 			case 2:
 				state->count1--;
-				diff = 2;
+				mul_ptr = mul + 9;
+				state->field[index] += *(mul_ptr++);
+				for (int i = 0; i < 8; i++) {
+					state->field[index + adjacent[i]] += *mul_ptr;
+					mul_ptr++;
+				}
+				m = mask[y];
+				if (x > 0)
+					state->changed[x - 1] |= m;
+				state->changed[x] |= m;
+				if (x < FIELD_WIDTH - 1)
+					state->changed[x + 1] |= m;
 				break;
 		}
-	}
-	if (diff > 0) {
-		const short *mul_ptr = mul + (diff - 1) * 9;
-		state->field[index] += *(mul_ptr++);
-		for (int i = 0; i < 8; i++) {
-			state->field[index + adjacent[i]] += *mul_ptr;
-			mul_ptr++;
-		}
-		unsigned char x = index_to_x[index];
-		unsigned char y = index_to_y[index];
-		const unsigned short m = mask[y];
-		if (x > 0)
-			state->changed[x - 1] |= m;
-		state->changed[x] |= m;
-		if (x < FIELD_WIDTH - 1)
-			state->changed[x + 1] |= m;
 	}
 }
 
@@ -131,16 +165,26 @@ bool verify_fastState(const struct FastState *state) {
 			int new_val = owner;
 			for (int i = 7; i >= 0; i--) {
 				int adj_index = index + adjacent[i];
+				if (adj_index/(FIELD_WIDTH+2)-1 < 0){
+					mul*=3;
+					continue;
+				}
+				if (adj_index % (FIELD_WIDTH+2)-1 < 0 || adj_index % (FIELD_WIDTH+2)-1 == FIELD_WIDTH){
+					mul*=3;
+					continue;
+				}
 				int adj_value = state->field[adj_index];
 				int adj_owner = mod3[adj_value];
 				new_val += adj_owner * mul;
 				mul *= 3;
 			}
-			if (new_val != val)
-				fprintf(stderr, "%d %d %d\n", index, val, new_val);
+			if (new_val != val){
+				fprintf(stderr, "%x %d %d %d\n", x, y, val, new_val);
+				return true;
+			}
 		}
 	}
-	return true;
+	return false;
 }
 
 #endif
