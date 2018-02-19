@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
+#include <limits.h>
 #include "definitions.h"
 #include "GameState.h"
 #include "parser.h"

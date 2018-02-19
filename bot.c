@@ -1,7 +1,6 @@
 #ifndef BOT
 #define BOT
 
-#include <limits.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -11,7 +10,7 @@
 #include "definitions.h"
 #include "data.h"
 
-short *minimax(const struct FastState *state, const struct FastState **predictions, const unsigned char depth, short alpha, short beta)
+short *minimax(const struct FastState *state, struct FastState **predictions, const unsigned char depth, short alpha, short beta)
 {
 	if (depth == 0){
 		short score = (short)(state->count0) - state->count1;
@@ -32,7 +31,7 @@ short *minimax(const struct FastState *state, const struct FastState **predictio
 	for (int y=0; y<FIELD_HEIGHT; y++){
 		for (int x=0; x<FIELD_WIDTH; x++){
 			unsigned short index = (x + 1) + (y + 1) * (FIELD_WIDTH + 2);
-			if (mod3[state->field[index]] == state->your_botid + 1){
+			if (mod3[state->field[index]] == !state->your_botid + 1){
 				struct FastState *new_state = copy_fastState(state, true);
 				set_cell(new_state, index, 0);
 				next_state = simulate_with_prediction(new_state, predictions[0]);
@@ -60,7 +59,7 @@ short *minimax(const struct FastState *state, const struct FastState **predictio
 	for (int y=0; y<FIELD_HEIGHT; y++){
 		for (int x=0; x<FIELD_WIDTH; x++){
 			unsigned short index = (x + 1) + (y + 1) * (FIELD_WIDTH + 2);
-			if (mod3[state->field[index]] == !state->your_botid + 1){
+			if (mod3[state->field[index]] == state->your_botid + 1){
 				struct FastState *new_state = copy_fastState(state, true);
 				set_cell(new_state, index, 0);
 				next_state = simulate_with_prediction(new_state, predictions[0]);
