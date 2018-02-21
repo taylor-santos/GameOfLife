@@ -47,9 +47,7 @@ void parse(FILE *input, struct FastState *state)
 						owner = 2;
 					}
 					if (owner) {
-						//owner += 2; //Change to diff notation
 						int index = (x + 1) + (y + 1)*(FIELD_WIDTH + 2);
-						//const short *mul_ptr = mul + (owner - 1) * 9;
 						state->field[index] += owner;
 						int mul = 3;
 						for (int i = 0; i < 8; i++) {
@@ -69,7 +67,8 @@ void parse(FILE *input, struct FastState *state)
 	}
 	else if (strstr(buffer, "settings") != NULL) {
 		if (strstr(buffer, "your_botid") != NULL) {
-			state->your_botid = atoi(buffer + 20);
+			extern unsigned char your_botid;
+			your_botid = atoi(buffer + 20);
 		}
 	}
 	else {

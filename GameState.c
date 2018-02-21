@@ -13,7 +13,6 @@ struct FastState *instantiate_fastState()
 	struct FastState *state = malloc(sizeof(*state));
 	state->count0 = 0;
 	state->count1 = 0;
-	state->your_botid = 0;
 	state->field = calloc(sizeof(*(state->field)), (FIELD_WIDTH + 2) * (FIELD_HEIGHT + 2));
 	state->changed = calloc(sizeof(*(state->changed)), FIELD_WIDTH);
 	return state;
@@ -64,7 +63,6 @@ struct FastState *copy_fastState(const struct FastState *state, const bool copy_
 	struct FastState *new_state = malloc(sizeof(*new_state));
 	new_state->count0 = state->count0;
 	new_state->count1 = state->count1;
-	new_state->your_botid = state->your_botid;
 	new_state->field = malloc(sizeof(*(new_state->field)) * (FIELD_WIDTH+2) * (FIELD_HEIGHT+2));
 	memcpy(new_state->field, state->field, sizeof(*(state->field)) * (FIELD_WIDTH+2) * (FIELD_HEIGHT+2));
 	if (copy_changes){

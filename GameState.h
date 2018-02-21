@@ -8,7 +8,6 @@ struct FastState
 {
 	unsigned short *field;
 	unsigned short *changed;
-	unsigned char your_botid;
 	unsigned char count0; //Field is technically 288 cells large, assume a player can't get more than 256 cells
 	unsigned char count1;
 };
