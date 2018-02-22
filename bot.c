@@ -11,11 +11,11 @@
 #include "definitions.h"
 #include "data.h"
 
-short *minimax(const struct FastState *state, const unsigned char id, struct FastState **predictions, const unsigned char depth, short alpha, short beta)
+int *minimax(const struct FastState *state, const unsigned char id, struct FastState **predictions, const unsigned char depth, short alpha, short beta)
 {
 	//Returns a short array of length depth+1. minimax[0] = score, minimax[1:depth+1] = sequence of moves.
 	if (state->count0 == 0){
-		short *move = malloc(sizeof(*move) * (depth+1));
+		int *move = malloc(sizeof(*move) * (depth+1));
 		move[0] = SHRT_MIN + 2;
 		if (state->count1 != 0 && id == 1){
 			move[0] = SHRT_MAX-1;
@@ -25,7 +25,7 @@ short *minimax(const struct FastState *state, const unsigned char id, struct Fas
 		return move;
 	}
 	if (state->count1 == 0){
-		short *move = malloc(sizeof(*move) * (depth+1));
+		int *move = malloc(sizeof(*move) * (depth+1));
 		move[0] = SHRT_MIN + 2;
 		if (state->count0 != 0 && id == 0){
 			move[0] = SHRT_MAX - 1;
@@ -35,18 +35,18 @@ short *minimax(const struct FastState *state, const unsigned char id, struct Fas
 		return move;
 	}
 	if (depth == 0){
-		short score = (short)(state->count0) - state->count1;
+		int score = (int)(state->count0) - state->count1;
 		if (id == 1)
 			score = -score;
-		short *move = malloc(sizeof(*move));
+		int *move = malloc(sizeof(*move));
 		move[0] = score;
 		return move;
 	}
 	struct FastState *next_state = simulate_with_prediction(state, predictions[0]);
-	short *pass_result = minimax(next_state, !id, predictions + 1, depth - 1, -beta, -alpha);
+	int *pass_result = minimax(next_state, !id, predictions + 1, depth - 1, -beta, -alpha);
 	free_fastState(&next_state);
-	short best_score = -pass_result[0];
-	short *best_sequence = malloc(sizeof(*best_sequence) * depth);
+	int best_score = -pass_result[0];
+	int *best_sequence = malloc(sizeof(*best_sequence) * depth);
 	best_sequence[0] = -1;
 	for (int i=1; i<depth; i++)
 		best_sequence[i] = pass_result[i];
@@ -63,13 +63,12 @@ short *minimax(const struct FastState *state, const unsigned char id, struct Fas
 				for (int i = 1; i < depth; i++) {
 					next_predictions[i] = simulate_with_prediction(next_predictions[i - 1], predictions[i]);
 				}			
-
-				short *kill_result = minimax(next_predictions[0], !id, next_predictions + 1, depth - 1, -beta, -alpha);
+				int *kill_result = minimax(next_predictions[0], !id, next_predictions + 1, depth - 1, -beta, -alpha);
 				for (int i=0; i<depth; i++){
 					free_fastState(&(next_predictions[i]));
 				}
 				free(next_predictions);
-				short score = -kill_result[0];
+				int score = -kill_result[0];
 				if (score > best_score) {
 					best_score = score;				
 					best_sequence[0] = index;
@@ -82,7 +81,7 @@ short *minimax(const struct FastState *state, const unsigned char id, struct Fas
 				}
 				if (beta <= alpha) {
 					free(best_sequence);
-					short *move = malloc(sizeof(*move) *(depth + 1));
+					int *move = malloc(sizeof(*move) *(depth + 1));
 					move[0] = beta;
 					for (int i=0; i<depth; i++)
 						move[i+1] = kill_result[i+1];
@@ -93,6 +92,8 @@ short *minimax(const struct FastState *state, const unsigned char id, struct Fas
 			}
 		}
 	}
+	int best_birth_score = SHRT_MIN + 1;
+	unsigned short best_birth_kills[2] = { -1, -1 };
 	for (int y=0; y<FIELD_HEIGHT; y++){
 		for (int x=0; x<FIELD_WIDTH; x++){
 			unsigned short index = (x + 1) + (y + 1) * (FIELD_WIDTH + 2);
@@ -105,26 +106,28 @@ short *minimax(const struct FastState *state, const unsigned char id, struct Fas
 				for (int i = 1; i < depth; i++) {
 					next_predictions[i] = simulate_with_prediction(next_predictions[i - 1], predictions[i]);
 				}
-
-				short *kill_result = minimax(next_predictions[0], !id, next_predictions + 1, depth - 1, -beta, -alpha);
+				int *kill_result = minimax(next_predictions[0], !id, next_predictions + 1, depth - 1, -beta, -alpha);
 				for (int i = 0; i<depth; i++) {
 					free_fastState(&(next_predictions[i]));
 				}
 				free(next_predictions);
-				short score = -kill_result[0];
+				int score = -kill_result[0];
 				if (score > best_score) {
 					best_score = score;
 					best_sequence[0] = index;
 					for (int i = 1; i<depth; i++)
 						best_sequence[i] = kill_result[i];
 				}
-
+				if (score > best_birth_score) {
+					best_birth_score = score;
+					best_birth_kills[0] = index;
+				}
 				if (score > alpha) {
 					alpha = score;
 				}
 				if (beta <= alpha) {
 					free(best_sequence);
-					short *move = malloc(sizeof(*move) *(depth + 1));
+					int *move = malloc(sizeof(*move) *(depth + 1));
 					move[0] = beta;
 					for (int i = 0; i<depth; i++)
 						move[i + 1] = kill_result[i + 1];
@@ -135,7 +138,104 @@ short *minimax(const struct FastState *state, const unsigned char id, struct Fas
 			}
 		}
 	}
-	short *move = malloc(sizeof(*move) * (depth + 1));
+	if (best_birth_kills[0] != -1) {
+		struct FastState *kill_state = copy_fastState(state, true);
+		set_cell(kill_state, best_birth_kills[0], 0);
+		best_birth_score = SHRT_MIN + 1;
+		for (int y = 0; y<FIELD_HEIGHT; y++) {
+			for (int x = 0; x<FIELD_WIDTH; x++) {
+				unsigned short index = (x + 1) + (y + 1) * (FIELD_WIDTH + 2);
+				if (mod3[state->field[index]] == id + 1) {
+					struct FastState *new_state = copy_fastState(kill_state, true);
+					set_cell(new_state, index, 0);
+					struct FastState **next_predictions = malloc(sizeof(*predictions) * depth);
+					next_predictions[0] = simulate_with_prediction(new_state, predictions[0]);
+					free_fastState(&new_state);
+					for (int i = 1; i < depth; i++) {
+						next_predictions[i] = simulate_with_prediction(next_predictions[i - 1], predictions[i]);
+					}
+					int *kill_result = minimax(next_predictions[0], !id, next_predictions + 1, depth - 1, -beta, -alpha);
+					for (int i = 0; i<depth; i++) {
+						free_fastState(&(next_predictions[i]));
+					}
+					free(next_predictions);
+					int score = -kill_result[0];
+					if (score > best_score) {
+						best_score = score;
+						best_sequence[0] = index;
+						for (int i = 1; i<depth; i++)
+							best_sequence[i] = kill_result[i];
+					}
+					if (score > best_birth_score) {
+						best_birth_score = score;
+						best_birth_kills[1] = index;
+					}
+					if (score > alpha) {
+						alpha = score;
+					}
+					if (beta <= alpha) {
+						free(best_sequence);
+						free_fastState(&kill_state);
+						int *move = malloc(sizeof(*move) *(depth + 1));
+						move[0] = beta;
+						for (int i = 0; i<depth; i++)
+							move[i + 1] = kill_result[i + 1];
+						free(kill_result);
+						return move;
+					}
+					free(kill_result);
+				}
+			}
+		}
+
+		if (best_birth_kills[1] != -1) {
+			set_cell(kill_state, best_birth_kills[1], 0);
+			best_birth_score = SHRT_MIN + 1;
+			for (int y = 0; y<FIELD_HEIGHT; y++) {
+				for (int x = 0; x<FIELD_WIDTH; x++) {
+					unsigned short index = (x + 1) + (y + 1) * (FIELD_WIDTH + 2);
+					if (state->field[index] != 0 && mod3[state->field[index]] == 0) {
+						struct FastState *new_state = copy_fastState(kill_state, true);
+						set_cell(new_state, index, id + 1);
+						struct FastState **next_predictions = malloc(sizeof(*predictions) * depth);
+						next_predictions[0] = simulate_with_prediction(new_state, predictions[0]);
+						free_fastState(&new_state);
+						for (int i = 1; i < depth; i++) {
+							next_predictions[i] = simulate_with_prediction(next_predictions[i - 1], predictions[i]);
+						}
+						int *birth_result = minimax(next_predictions[0], !id, next_predictions + 1, depth - 1, -beta, -alpha);
+						for (int i = 0; i<depth; i++) {
+							free_fastState(&(next_predictions[i]));
+						}
+						free(next_predictions);
+						int score = -birth_result[0];
+						if (score > best_score) {
+							best_score = score;
+							best_sequence[0] = index + 360 + best_birth_kills[0] * 360 + best_birth_kills[1] * 129600;
+							for (int i = 1; i<depth; i++)
+								best_sequence[i] = birth_result[i];
+						}
+						if (score > alpha) {
+							alpha = score;
+						}
+						if (beta <= alpha) {
+							free(best_sequence);
+							free_fastState(&kill_state);
+							int *move = malloc(sizeof(*move) *(depth + 1));
+							move[0] = beta;
+							for (int i = 0; i<depth; i++)
+								move[i + 1] = birth_result[i + 1];
+							free(birth_result);
+							return move;
+						}
+						free(birth_result);
+					}
+				}
+			}
+		}
+		free_fastState(&kill_state);
+	}
+	int *move = malloc(sizeof(*move) * (depth + 1));
 	move[0] = best_score;
 	for (int i=0; i<depth; i++)
 		move[i+1] = best_sequence[i];
