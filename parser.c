@@ -21,14 +21,45 @@ void parse(FILE *input, struct FastState *state)
 		exit(BAD_DATA);
 	}
 	if (strstr(buffer, "action") != NULL) {
+		extern unsigned char your_botid;
 		clock_t t;
 		print_fast(state);
 		t = clock();
-		
+		unsigned char depth = 4;
+		struct FastState **predictions = malloc(sizeof(*predictions) * depth);
+		predictions[0] = simulate_fast(state);
+		for (int i = 1; i < depth; i++) {
+			predictions[i] = simulate_fast(predictions[i - 1]);
+		}
+		short *move = minimax(state, your_botid, predictions, depth, SHRT_MIN + 1, SHRT_MAX);
+		fprintf(stderr, "%d\n", move[1]);
+		if (move[1] == -1) {
+			fprintf(stdout, "pass\n");
+		}
+		else if (move[1] < 360){
+			unsigned char x = index_to_x[move[1]];
+			unsigned char y = index_to_y[move[1]];
+			fprintf(stdout, "kill %d,%d\n", x, y);
+		}
+		else {
+			unsigned short birthIndex = move[1] % 360;
+			unsigned short kill1Index = (move[1] / 360 - 1) % 360;
+			unsigned short kill2Index = move[1] / 129600;
+			fprintf(stdout, "birth %d,%d %d,%d %d,%d\n", 
+				index_to_x[birthIndex], index_to_y[birthIndex], 
+				index_to_x[kill1Index], index_to_y[kill1Index], 
+				index_to_x[kill2Index], index_to_y[kill1Index]);
+		}
+		fprintf(stderr, "Score: %d\n", move[0]);
+		for (int i = 0; i<depth; i++) {
+			fprintf(stderr, "%d\n", move[i + 1]);
+		}
 		fflush(stdout);
+		free(move);
 		t = clock() - t;
-		double ms = ((double)t) / CLOCKS_PER_SEC * 1000;
-		fprintf(stderr, "Time taken: %dms\n", (int)ms);
+		fprintf(stderr, "Time: %fms\n", (double)t / CLOCKS_PER_SEC * 1000.0);
+		free_fastState(&state);
+		state = instantiate_fastState();
 	}
 	else if (strstr(buffer, "update") != NULL) {
 		if (strstr(buffer, "field") != NULL) {

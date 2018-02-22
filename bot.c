@@ -35,7 +35,7 @@ short *minimax(const struct FastState *state, const unsigned char id, struct Fas
 		return move;
 	}
 	if (depth == 0){
-		short score = (short)(state->count0) - state->count1;
+		short score = (int)(state->count0) - state->count1;
 		if (id == 1)
 			score = -score;
 		short *move = malloc(sizeof(*move));
@@ -63,7 +63,6 @@ short *minimax(const struct FastState *state, const unsigned char id, struct Fas
 				for (int i = 1; i < depth; i++) {
 					next_predictions[i] = simulate_with_prediction(next_predictions[i - 1], predictions[i]);
 				}			
-
 				short *kill_result = minimax(next_predictions[0], !id, next_predictions + 1, depth - 1, -beta, -alpha);
 				for (int i=0; i<depth; i++){
 					free_fastState(&(next_predictions[i]));
@@ -76,7 +75,6 @@ short *minimax(const struct FastState *state, const unsigned char id, struct Fas
 					for (int i=1; i<depth; i++)
 						best_sequence[i] = kill_result[i];
 				}
-				
 				if (score > alpha) {
 					alpha = score;
 				}
@@ -105,7 +103,6 @@ short *minimax(const struct FastState *state, const unsigned char id, struct Fas
 				for (int i = 1; i < depth; i++) {
 					next_predictions[i] = simulate_with_prediction(next_predictions[i - 1], predictions[i]);
 				}
-
 				short *kill_result = minimax(next_predictions[0], !id, next_predictions + 1, depth - 1, -beta, -alpha);
 				for (int i = 0; i<depth; i++) {
 					free_fastState(&(next_predictions[i]));
@@ -118,7 +115,6 @@ short *minimax(const struct FastState *state, const unsigned char id, struct Fas
 					for (int i = 1; i<depth; i++)
 						best_sequence[i] = kill_result[i];
 				}
-
 				if (score > alpha) {
 					alpha = score;
 				}
