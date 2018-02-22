@@ -5,6 +5,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
+#include <limits.h>
 #include "definitions.h"
 #include "GameState.h"
 #include "bot.h"
@@ -23,7 +24,6 @@ void parse(FILE *input, struct FastState *state)
 	if (strstr(buffer, "action") != NULL) {
 		extern unsigned char your_botid;
 		clock_t t;
-		print_fast(state);
 		t = clock();
 		unsigned char depth = 4;
 		struct FastState **predictions = malloc(sizeof(*predictions) * depth);
@@ -36,20 +36,12 @@ void parse(FILE *input, struct FastState *state)
 		if (move[1] == -1) {
 			fprintf(stdout, "pass\n");
 		}
-		else if (move[1] < 360){
+		else{
 			unsigned char x = index_to_x[move[1]];
 			unsigned char y = index_to_y[move[1]];
 			fprintf(stdout, "kill %d,%d\n", x, y);
 		}
-		else {
-			unsigned short birthIndex = move[1] % 360;
-			unsigned short kill1Index = (move[1] / 360 - 1) % 360;
-			unsigned short kill2Index = move[1] / 129600;
-			fprintf(stdout, "birth %d,%d %d,%d %d,%d\n", 
-				index_to_x[birthIndex], index_to_y[birthIndex], 
-				index_to_x[kill1Index], index_to_y[kill1Index], 
-				index_to_x[kill2Index], index_to_y[kill1Index]);
-		}
+		print_fast(state);
 		fprintf(stderr, "Score: %d\n", move[0]);
 		for (int i = 0; i<depth; i++) {
 			fprintf(stderr, "%d\n", move[i + 1]);

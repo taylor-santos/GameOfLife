@@ -42,15 +42,11 @@ short *minimax(const struct FastState *state, const unsigned char id, struct Fas
 		move[0] = score;
 		return move;
 	}
-	struct FastState *next_state = simulate_with_prediction(state, predictions[0]);
-	short *pass_result = minimax(next_state, !id, predictions + 1, depth - 1, -beta, -alpha);
-	free_fastState(&next_state);
-	short best_score = -pass_result[0];
 	short *best_sequence = malloc(sizeof(*best_sequence) * depth);
-	best_sequence[0] = -1;
-	for (int i=1; i<depth; i++)
-		best_sequence[i] = pass_result[i];
-	free(pass_result);
+	for (int i = 0; i < depth; i++) {
+		best_sequence[i] = -1;
+	}	
+	short best_score = SHRT_MIN + 1;
 	for (int y=0; y<FIELD_HEIGHT; y++){
 		for (int x=0; x<FIELD_WIDTH; x++){
 			unsigned short index = (x + 1) + (y + 1) * (FIELD_WIDTH + 2);
@@ -131,6 +127,17 @@ short *minimax(const struct FastState *state, const unsigned char id, struct Fas
 			}
 		}
 	}
+	struct FastState *next_state = simulate_with_prediction(state, predictions[0]);
+	short *pass_result = minimax(next_state, !id, predictions + 1, depth - 1, -beta, -alpha);
+	free_fastState(&next_state);
+	short pass_score = -pass_result[0];
+	if (pass_score > best_score) {
+		best_score = pass_score;
+		best_sequence[0] = -1;
+		for (int i = 1; i<depth; i++)
+			best_sequence[i] = pass_result[i];
+	}
+	free(pass_result);
 	short *move = malloc(sizeof(*move) * (depth + 1));
 	move[0] = best_score;
 	for (int i=0; i<depth; i++)
