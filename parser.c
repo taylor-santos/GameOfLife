@@ -36,10 +36,19 @@ void parse(FILE *input, struct FastState *state)
 		if (move[1] == -1) {
 			fprintf(stdout, "pass\n");
 		}
-		else{
+		else if (move[1] < 360){
 			unsigned char x = index_to_x[move[1]];
 			unsigned char y = index_to_y[move[1]];
 			fprintf(stdout, "kill %d,%d\n", x, y);
+		}
+		else {
+			unsigned short birthIndex = move[1] % 360;
+			unsigned short kill1Index = (move[1] / 360 - 1) % 360;
+			unsigned short kill2Index = move[1] / 129600;
+			fprintf(stdout, "birth %d,%d %d,%d %d,%d\n",
+				index_to_x[birthIndex], index_to_y[birthIndex],
+				index_to_x[kill1Index], index_to_y[kill1Index],
+				index_to_x[kill2Index], index_to_y[kill1Index]);
 		}
 		print_fast(state);
 		fprintf(stderr, "Score: %d\n", move[0]);
