@@ -11,7 +11,7 @@
 #include "bot.h"
 #include "data.h"
 
-void parse(FILE *input, struct FastState *state)
+void parse(FILE *input, struct State *state)
 {
 	char buffer[BUFFER_SIZE];
 	for (int i = 0; i<BUFFER_SIZE; i++) {
@@ -22,16 +22,15 @@ void parse(FILE *input, struct FastState *state)
 		exit(BAD_DATA);
 	}
 	if (strstr(buffer, "action") != NULL) {
+		print(state);
+		struct State *next_state = simulate(state);
+		print(next_state);
+		/*
 		extern unsigned char your_botid;
 		clock_t t;
 		t = clock();
-		unsigned char depth = 2;
-		struct FastState **predictions = malloc(sizeof(*predictions) * depth);
-		predictions[0] = simulate_fast(state);
-		for (int i = 1; i < depth; i++) {
-			predictions[i] = simulate_fast(predictions[i - 1]);
-		}
-		int *move = minimax(state, your_botid, predictions, depth, SHRT_MIN + 1, SHRT_MAX);
+		unsigned char depth = 4;
+		int *move = minimax(state, your_botid, depth, SHRT_MIN + 1, SHRT_MAX);
 		fprintf(stderr, "%d\n", move[1]);
 		if (move[1] == -1) {
 			fprintf(stdout, "pass\n");
@@ -68,6 +67,7 @@ void parse(FILE *input, struct FastState *state)
 		fprintf(stderr, "Time: %fms\n", (double)t / CLOCKS_PER_SEC * 1000.0);
 		free_fastState(&state);
 		state = instantiate_fastState();
+		*/
 	}
 	else if (strstr(buffer, "update") != NULL) {
 		if (strstr(buffer, "field") != NULL) {
@@ -76,22 +76,28 @@ void parse(FILE *input, struct FastState *state)
 			for (int y = 0; y < FIELD_HEIGHT; y++) {
 				for (int x = 0; x < FIELD_WIDTH; x++) {
 					char c = buffer[18 + 2 * (FIELD_WIDTH*y + x)];
-					int owner = 0;
 					if (c == '0') {
 						state->count0++;
-						owner = 1;
+						int index = x + y*FIELD_WIDTH;
+						state->field[index] = 1;
+						unsigned short *adj = new_adjacent[index];
+						for (int i=0; i<adj[0]; i++){
+							state->neighbors[adj[i+1]]++;
+						}
+						const unsigned short m = mask[y];
+						if (x > 0)
+							state->changed[x - 1] |= m;
+						state->changed[x] |= m;
+						if (x < FIELD_WIDTH - 1)
+							state->changed[x + 1] |= m;
 					}
 					else if (c == '1') {
 						state->count1++;
-						owner = 2;
-					}
-					if (owner) {
-						int index = (x + 1) + (y + 1)*(FIELD_WIDTH + 2);
-						state->field[index] += owner;
-						int mul = 3;
-						for (int i = 0; i < 8; i++) {
-							state->field[index + adjacent[i]] += mul * owner;
-							mul *= 3;
+						int index = x + y*FIELD_WIDTH;
+						state->field[index] = 2;
+						unsigned short *adj = new_adjacent[index];
+						for (int i=0; i<adj[0]; i++){
+							state->neighbors[adj[i+1]] += 9;
 						}
 						const unsigned short m = mask[y];
 						if (x > 0)

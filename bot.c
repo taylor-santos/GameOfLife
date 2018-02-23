@@ -11,7 +11,7 @@
 #include "definitions.h"
 #include "data.h"
 
-int *minimax(const struct FastState *state, const unsigned char id, struct FastState **predictions, const unsigned char depth, int alpha, int beta)
+int *minimax(const struct State *state, const unsigned char id, const unsigned char depth, int alpha, int beta)
 {
 	//Returns a short array of length depth+1. minimax[0] = score, minimax[1:depth+1] = sequence of moves.
 	if (state->count0 == 0){
@@ -56,9 +56,9 @@ int *minimax(const struct FastState *state, const unsigned char id, struct FastS
 
 	for (int y=0; y<FIELD_HEIGHT; y++){
 		for (int x=0; x<FIELD_WIDTH; x++){
-			unsigned short index = (x + 1) + (y + 1) * (FIELD_WIDTH + 2);
-			if (state->field[index] != 0) {
-				unsigned char owner = mod3[state->field[index]];
+			unsigned short index = x + y*FIELD_WIDTH;
+			if (state->neighbors[index] != 0) {
+				unsigned char owner = state->field[index];
 				if (owner == 0)
 					open_cells[open_index++] = index;
 				else if (owner == id + 1)
@@ -68,6 +68,7 @@ int *minimax(const struct FastState *state, const unsigned char id, struct FastS
 			}
 		}
 	}
+	/*
 	for (int i = 0; i < owned_index; i++) {
 		struct FastState *state1 = copy_fastState(state, true);
 		set_cell(state1, owned_cells[i], 0);
@@ -77,17 +78,12 @@ int *minimax(const struct FastState *state, const unsigned char id, struct FastS
 			for (int k = 0; k < open_index; k++) {
 				struct FastState *new_state = copy_fastState(state2, true);
 				set_cell(new_state, open_cells[k], id + 1);
-				struct FastState **next_predictions = malloc(sizeof(*predictions) * depth);
-				next_predictions[0] = simulate_with_prediction(new_state, predictions[0]);
+				//struct FastState **next_predictions = malloc(sizeof(*predictions) * depth);
+				//next_predictions[0] = simulate_with_prediction(new_state, predictions[0]);
+				struct FastState *next_state = simulate_fast(new_state);
 				free_fastState(&new_state);
-				for (int n = 1; n < depth; n++) {
-					next_predictions[n] = simulate_with_prediction(next_predictions[n - 1], predictions[n]);
-				}
-				int *result = minimax(next_predictions[0], !id, next_predictions + 1, depth - 1, -beta, -alpha);
-				for (int n = 0; n<depth; n++) {
-					free_fastState(&(next_predictions[n]));
-				}
-				free(next_predictions);
+				int *result = minimax(next_state, !id, depth - 1, -beta, -alpha);
+				free_fastState(&next_state);
 				int score = -result[0];
 				if (score > best_score) {
 					best_score = score;
@@ -115,27 +111,34 @@ int *minimax(const struct FastState *state, const unsigned char id, struct FastS
 		}
 		free_fastState(&state1);
 	}
+	*/
 	for(int i=0; i<enemy_index; i++){
 		unsigned short index = enemy_cells[i];
-		struct FastState *new_state = copy_fastState(state, true);
+		struct State *new_state = copy_state(state, true);
 		set_cell(new_state, index, 0);
-		struct FastState **next_predictions = malloc(sizeof(*predictions) * depth);
-		next_predictions[0] = simulate_with_prediction(new_state, predictions[0]);
-		free_fastState(&new_state);
-		for (int j = 1; j < depth; j++) {
-			next_predictions[j] = simulate_with_prediction(next_predictions[j - 1], predictions[j]);
+		//struct FastState **next_predictions = malloc(sizeof(*predictions) * depth);
+		//next_predictions[0] = simulate_with_prediction(new_state, predictions[0]);
+		struct State *next_state = simulate(new_state);
+		free_state(&new_state);
+		/*
+		for (int n = 1; n < depth; n++) {
+			next_predictions[n] = simulate_with_prediction(next_predictions[n - 1], predictions[n]);
 		}
-		int *kill_result = minimax(next_predictions[0], !id, next_predictions + 1, depth - 1, -beta, -alpha);
-		for (int j = 0; j<depth; j++) {
-			free_fastState(&(next_predictions[j]));
+		*/
+		int *result = minimax(next_state, !id, depth - 1, -beta, -alpha);
+		/*
+		for (int n = 0; n<depth; n++) {
+			free_fastState(&(next_predictions[n]));
 		}
 		free(next_predictions);
-		int score = -kill_result[0];
+		*/
+		free_state(&next_state);
+		int score = -result[0];
 		if (score > best_score) {
 			best_score = score;
 			best_sequence[0] = index;
-			for (int j = 1; j<depth; j++)
-				best_sequence[j] = kill_result[j];
+			for (int n = 1; n<depth; n++)
+				best_sequence[n] = (int)result[n];
 		}
 		if (score > alpha) {
 			alpha = score;
@@ -144,34 +147,40 @@ int *minimax(const struct FastState *state, const unsigned char id, struct FastS
 			free(best_sequence);
 			int *move = malloc(sizeof(*move) *(depth + 1));
 			move[0] = beta;
-			for (int j = 1; j<depth + 1; j++)
-				move[j] = -2;
-			free(kill_result);
+			for (int n = 1; n<depth + 1; n++)
+				move[n] = -3;
+			free(result);
 			return move;
 		}
-		free(kill_result);
+		free(result);
 	}
 	for(int i=0; i<owned_index; i++){
 		unsigned short index = owned_cells[i];
-		struct FastState *new_state = copy_fastState(state, true);
+		struct State *new_state = copy_state(state, true);
 		set_cell(new_state, index, 0);
-		struct FastState **next_predictions = malloc(sizeof(*predictions) * depth);
-		next_predictions[0] = simulate_with_prediction(new_state, predictions[0]);
-		free_fastState(&new_state);
-		for (int j = 1; j < depth; j++) {
-			next_predictions[j] = simulate_with_prediction(next_predictions[j - 1], predictions[j]);
+		//struct FastState **next_predictions = malloc(sizeof(*predictions) * depth);
+		//next_predictions[0] = simulate_with_prediction(new_state, predictions[0]);
+		struct State *next_state = simulate(new_state);
+		free_state(&new_state);
+		/*
+		for (int n = 1; n < depth; n++) {
+			next_predictions[n] = simulate_with_prediction(next_predictions[n - 1], predictions[n]);
 		}
-		int *kill_result = minimax(next_predictions[0], !id, next_predictions + 1, depth - 1, -beta, -alpha);
-		for (int j = 0; j<depth; j++) {
-			free_fastState(&(next_predictions[j]));
+		*/
+		int *result = minimax(next_state, !id, depth - 1, -beta, -alpha);
+		/*
+		for (int n = 0; n<depth; n++) {
+			free_fastState(&(next_predictions[n]));
 		}
 		free(next_predictions);
-		int score = -kill_result[0];
+		*/
+		free_state(&next_state);
+		int score = -result[0];
 		if (score > best_score) {
 			best_score = score;
 			best_sequence[0] = index;
-			for (int j = 1; j<depth; j++)
-				best_sequence[j] = kill_result[j];
+			for (int n = 1; n<depth; n++)
+				best_sequence[n] = (int)result[n];
 		}
 		if (score > alpha) {
 			alpha = score;
@@ -180,16 +189,17 @@ int *minimax(const struct FastState *state, const unsigned char id, struct FastS
 			free(best_sequence);
 			int *move = malloc(sizeof(*move) *(depth + 1));
 			move[0] = beta;
-			for (int j = 1; j<depth + 1; j++)
-				move[j] = -2;
-			free(kill_result);
+			for (int n = 1; n<depth + 1; n++)
+				move[n] = -3;
+			free(result);
 			return move;
 		}
-		free(kill_result);
+		free(result);
 	}
-	struct FastState *next_state = simulate_with_prediction(state, predictions[0]);
-	int *pass_result = minimax(next_state, !id, predictions + 1, depth - 1, -beta, -alpha);
-	free_fastState(&next_state);
+	//struct FastState *next_state = simulate_with_prediction(state, predictions[0]);
+	struct State *next_state = simulate(state);
+	int *pass_result = minimax(next_state, !id, depth - 1, -beta, -alpha);
+	free_state(&next_state);
 	int pass_score = -pass_result[0];
 	if (pass_score > best_score) {
 		best_score = pass_score;
@@ -206,13 +216,86 @@ int *minimax(const struct FastState *state, const unsigned char id, struct FastS
 	return move;
 }
 
+struct State *simulate(const struct State *state){
+	struct State *new_state = copy_state(state, false);
+	for (unsigned char x=0; x<FIELD_WIDTH; x++){
+		if (state->changed[x]){
+			for (unsigned char y=0; y<FIELD_HEIGHT; y++){
+				unsigned short index = x + y*FIELD_WIDTH;
+				if (state->changed[x] & index_mask[y]){
+					unsigned char n = state->neighbors[index] * (state->field[index] + 1);
+					char change = diff[n];
+					new_state->field[index] += change;
+					unsigned short *adj;
+					unsigned short m;
+					switch(change){
+						case (-2):
+						new_state->count1--;
+						adj = new_adjacent[index];
+						for (int i=0; i<adj[0]; i++){
+							new_state->neighbors[adj[i+1]] -= 9;
+						}
+						m = mask[y];
+						if (x > 0)
+							new_state->changed[x - 1] |= m;
+						state->changed[x] |= m;
+						if (x < FIELD_WIDTH - 1)
+							new_state->changed[x + 1] |= m;
+						break;
+						case (-1):
+						new_state->count0--;
+						adj = new_adjacent[index];
+						for (int i=0; i<adj[0]; i++){
+							new_state->neighbors[adj[i+1]] -= 1;
+						}
+						m = mask[y];
+						if (x > 0)
+							new_state->changed[x - 1] |= m;
+						state->changed[x] |= m;
+						if (x < FIELD_WIDTH - 1)
+							new_state->changed[x + 1] |= m;
+						break;
+						case (1):
+						new_state->count0++;
+						adj = new_adjacent[index];
+						for (int i=0; i<adj[0]; i++){
+							new_state->neighbors[adj[i+1]] += 1;
+						}
+						m = mask[y];
+						if (x > 0)
+							new_state->changed[x - 1] |= m;
+						state->changed[x] |= m;
+						if (x < FIELD_WIDTH - 1)
+							new_state->changed[x + 1] |= m;
+						break;
+						case (2):
+						new_state->count1++;
+						adj = new_adjacent[index];
+						for (int i=0; i<adj[0]; i++){
+							new_state->neighbors[adj[i+1]] += 9;
+						}
+						m = mask[y];
+						if (x > 0)
+							new_state->changed[x - 1] |= m;
+						state->changed[x] |= m;
+						if (x < FIELD_WIDTH - 1)
+							new_state->changed[x + 1] |= m;
+						break;
+					}
+				}
+			}
+		}
+	}
+	return new_state;
+}
+
 struct FastState *simulate_fast(const struct FastState *state)
 {
 	struct FastState *new_state = copy_fastState(state, false);
 	for (unsigned char x=0; x<FIELD_WIDTH; x++){
-		if (state->changed[x]){
+		//if (state->changed[x]){
 			for (unsigned char y=0; y<FIELD_HEIGHT; y++){
-				if (index_mask[y] & state->changed[x]) {
+				//if (index_mask[y] & state->changed[x]) {
 					unsigned short index = (x + 1) + (y + 1)*(FIELD_WIDTH + 2);
 					unsigned short curr = state->field[index];
 					unsigned char new_owner = *(table + curr);
@@ -230,12 +313,14 @@ struct FastState *simulate_fast(const struct FastState *state)
 								new_state->field[index + adjacent[i]] += *mul_ptr;
 								mul_ptr++;
 							}
+							/*
 							m = mask[y];
 							if (x > 0)
 								new_state->changed[x - 1] |= m;
 							new_state->changed[x] |= m;
 							if (x < FIELD_WIDTH - 1)
 								new_state->changed[x + 1] |= m;
+							*/
 							break;
 							case 2:
 							new_state->count1++;
@@ -246,12 +331,14 @@ struct FastState *simulate_fast(const struct FastState *state)
 								new_state->field[index + adjacent[i]] += *mul_ptr;
 								mul_ptr++;
 							}
+							/*
 							m = mask[y];
 							if (x > 0)
 								new_state->changed[x - 1] |= m;
 							new_state->changed[x] |= m;
 							if (x < FIELD_WIDTH - 1)
 								new_state->changed[x + 1] |= m;
+							*/
 							break;
 						}
 					}
@@ -266,12 +353,14 @@ struct FastState *simulate_fast(const struct FastState *state)
 								new_state->field[index + adjacent[i]] += *mul_ptr;
 								mul_ptr++;
 							}
+							/*
 							m = mask[y];
 							if (x > 0)
 								new_state->changed[x - 1] |= m;
 							new_state->changed[x] |= m;
 							if (x < FIELD_WIDTH - 1)
 								new_state->changed[x + 1] |= m;
+							*/
 							break;
 							case 2:
 							new_state->count1--;
@@ -282,22 +371,24 @@ struct FastState *simulate_fast(const struct FastState *state)
 								new_state->field[index + adjacent[i]] += *mul_ptr;
 								mul_ptr++;
 							}
+							/*
 							m = mask[y];
 							if (x > 0)
 								new_state->changed[x - 1] |= m;
 							new_state->changed[x] |= m;
 							if (x < FIELD_WIDTH - 1)
 								new_state->changed[x + 1] |= m;
+							*/
 							break;
 						}
 					}
-				}
+				//}
 			}
-		}
+		//}
 	}
 	return new_state;
 }
-
+/*
 struct FastState *simulate_with_prediction(const struct FastState *state, const struct FastState *prediction)
 {
 	struct FastState *new_state = copy_fastState(prediction, false);
@@ -389,5 +480,6 @@ struct FastState *simulate_with_prediction(const struct FastState *state, const 
 	}
 	return new_state;
 }
+*/
 
 #endif

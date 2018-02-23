@@ -11,7 +11,7 @@ unsigned char your_botid = 0;
 
 int main()
 {
-	struct FastState *state = instantiate_fastState();
+	struct State *state = instantiate_state();
 	while (true) {
 		parse(stdin, state);
 	}

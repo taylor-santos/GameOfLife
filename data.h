@@ -9,5 +9,7 @@ const unsigned char table[19683];
 const unsigned char mod3[19683];
 const char index_to_x[360];
 const char index_to_y[360];
+const char diff[243];
+const unsigned short new_adjacent[288][9];
 
 #endif
