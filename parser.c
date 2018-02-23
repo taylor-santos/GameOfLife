@@ -25,13 +25,13 @@ void parse(FILE *input, struct FastState *state)
 		extern unsigned char your_botid;
 		clock_t t;
 		t = clock();
-		unsigned char depth = 4;
+		unsigned char depth = 2;
 		struct FastState **predictions = malloc(sizeof(*predictions) * depth);
 		predictions[0] = simulate_fast(state);
 		for (int i = 1; i < depth; i++) {
 			predictions[i] = simulate_fast(predictions[i - 1]);
 		}
-		short *move = minimax(state, your_botid, predictions, depth, SHRT_MIN + 1, SHRT_MAX);
+		int *move = minimax(state, your_botid, predictions, depth, SHRT_MIN + 1, SHRT_MAX);
 		fprintf(stderr, "%d\n", move[1]);
 		if (move[1] == -1) {
 			fprintf(stdout, "pass\n");
@@ -53,7 +53,14 @@ void parse(FILE *input, struct FastState *state)
 		print_fast(state);
 		fprintf(stderr, "Score: %d\n", move[0]);
 		for (int i = 0; i<depth; i++) {
-			fprintf(stderr, "%d\n", move[i + 1]);
+			int val = move[i + 1];
+			if (val >= 360)
+				val -= 360;
+			while (val != 0){
+				fprintf(stderr, "(%d,%d) ", (val%360)%(FIELD_WIDTH+2)-1, (val%360)/(FIELD_WIDTH+2)-1);
+				val /= 360;
+			}
+			fprintf(stderr, "\n");
 		}
 		fflush(stdout);
 		free(move);
