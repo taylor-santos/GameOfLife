@@ -223,64 +223,66 @@ struct State *simulate(const struct State *state){
 			for (unsigned char y=0; y<FIELD_HEIGHT; y++){
 				unsigned short index = x + y*FIELD_WIDTH;
 				if (state->changed[x] & index_mask[y]){
-					unsigned char n = state->neighbors[index] * (state->field[index] + 1);
+					unsigned char n = state->neighbors[index] + 81*state->field[index];
 					char change = diff[n];
-					new_state->field[index] += change;
-					unsigned short *adj;
-					unsigned short m;
-					switch(change){
+					if (change != 0) {
+						new_state->field[index] += change;
+						const unsigned short *adj;
+						unsigned short m;
+						switch (change) {
 						case (-2):
-						new_state->count1--;
-						adj = new_adjacent[index];
-						for (int i=0; i<adj[0]; i++){
-							new_state->neighbors[adj[i+1]] -= 9;
-						}
-						m = mask[y];
-						if (x > 0)
-							new_state->changed[x - 1] |= m;
-						state->changed[x] |= m;
-						if (x < FIELD_WIDTH - 1)
-							new_state->changed[x + 1] |= m;
-						break;
+							new_state->count1--;
+							adj = new_adjacent[index];
+							for (int i = 0; i < adj[0]; i++) {
+								new_state->neighbors[adj[i + 1]] -= 9;
+							}
+							m = mask[y];
+							if (x > 0)
+								new_state->changed[x - 1] |= m;
+							new_state->changed[x] |= m;
+							if (x < FIELD_WIDTH - 1)
+								new_state->changed[x + 1] |= m;
+							break;
 						case (-1):
-						new_state->count0--;
-						adj = new_adjacent[index];
-						for (int i=0; i<adj[0]; i++){
-							new_state->neighbors[adj[i+1]] -= 1;
-						}
-						m = mask[y];
-						if (x > 0)
-							new_state->changed[x - 1] |= m;
-						state->changed[x] |= m;
-						if (x < FIELD_WIDTH - 1)
-							new_state->changed[x + 1] |= m;
-						break;
+							new_state->count0--;
+							adj = new_adjacent[index];
+							for (int i = 0; i < adj[0]; i++) {
+								new_state->neighbors[adj[i + 1]] -= 1;
+							}
+							m = mask[y];
+							if (x > 0)
+								new_state->changed[x - 1] |= m;
+							new_state->changed[x] |= m;
+							if (x < FIELD_WIDTH - 1)
+								new_state->changed[x + 1] |= m;
+							break;
 						case (1):
-						new_state->count0++;
-						adj = new_adjacent[index];
-						for (int i=0; i<adj[0]; i++){
-							new_state->neighbors[adj[i+1]] += 1;
-						}
-						m = mask[y];
-						if (x > 0)
-							new_state->changed[x - 1] |= m;
-						state->changed[x] |= m;
-						if (x < FIELD_WIDTH - 1)
-							new_state->changed[x + 1] |= m;
-						break;
+							new_state->count0++;
+							adj = new_adjacent[index];
+							for (int i = 0; i < adj[0]; i++) {
+								new_state->neighbors[adj[i + 1]] += 1;
+							}
+							m = mask[y];
+							if (x > 0)
+								new_state->changed[x - 1] |= m;
+							new_state->changed[x] |= m;
+							if (x < FIELD_WIDTH - 1)
+								new_state->changed[x + 1] |= m;
+							break;
 						case (2):
-						new_state->count1++;
-						adj = new_adjacent[index];
-						for (int i=0; i<adj[0]; i++){
-							new_state->neighbors[adj[i+1]] += 9;
+							new_state->count1++;
+							adj = new_adjacent[index];
+							for (int i = 0; i < adj[0]; i++) {
+								new_state->neighbors[adj[i + 1]] += 9;
+							}
+							m = mask[y];
+							if (x > 0)
+								new_state->changed[x - 1] |= m;
+							new_state->changed[x] |= m;
+							if (x < FIELD_WIDTH - 1)
+								new_state->changed[x + 1] |= m;
+							break;
 						}
-						m = mask[y];
-						if (x > 0)
-							new_state->changed[x - 1] |= m;
-						state->changed[x] |= m;
-						if (x < FIELD_WIDTH - 1)
-							new_state->changed[x + 1] |= m;
-						break;
 					}
 				}
 			}

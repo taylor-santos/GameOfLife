@@ -109,7 +109,7 @@ void set_cell(struct State *state, const unsigned short index, const unsigned ch
 }
 
 void print(const struct State *state){
-	fprintf(stderr, "%d-%d\n", state->count0, state->count1);
+	printf("%d-%d\n", state->count0, state->count1);
 	unsigned short mask = 1;
 	for (int y = 0; y < FIELD_HEIGHT; y++) {
 		for (int x = 0; x < FIELD_WIDTH; x++) {

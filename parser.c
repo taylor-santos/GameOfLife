@@ -21,11 +21,7 @@ void parse(FILE *input, struct State *state)
 		fprintf(stderr, "Failed to read from input.\n");
 		exit(BAD_DATA);
 	}
-	if (strstr(buffer, "action") != NULL) {
-		print(state);
-		struct State *next_state = simulate(state);
-		print(next_state);
-		/*
+	if (strstr(buffer, "action") != NULL) {	
 		extern unsigned char your_botid;
 		clock_t t;
 		t = clock();
@@ -49,7 +45,7 @@ void parse(FILE *input, struct State *state)
 				index_to_x[kill1Index], index_to_y[kill1Index],
 				index_to_x[kill2Index], index_to_y[kill1Index]);
 		}
-		print_fast(state);
+		print(state);
 		fprintf(stderr, "Score: %d\n", move[0]);
 		for (int i = 0; i<depth; i++) {
 			int val = move[i + 1];
@@ -65,9 +61,8 @@ void parse(FILE *input, struct State *state)
 		free(move);
 		t = clock() - t;
 		fprintf(stderr, "Time: %fms\n", (double)t / CLOCKS_PER_SEC * 1000.0);
-		free_fastState(&state);
-		state = instantiate_fastState();
-		*/
+		free_state(&state);
+		state = instantiate_state();
 	}
 	else if (strstr(buffer, "update") != NULL) {
 		if (strstr(buffer, "field") != NULL) {
