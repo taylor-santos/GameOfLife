@@ -25,21 +25,28 @@ void parse(FILE *input, struct State *state)
 		extern unsigned char your_botid;
 		clock_t t;
 		t = clock();
-		unsigned char depth = 4;
-		int *move = minimax(state, your_botid, depth, SHRT_MIN + 1, SHRT_MAX);
+		unsigned char depth = 2;
+		struct State **predictions = malloc(sizeof(*predictions) * depth);
+		predictions[0] = simulate(state);
+		for (int i = 1; i < depth; i++) {
+			predictions[i] = simulate(predictions[i - 1]);
+		}
+		free(state->changed);
+		state->changed = calloc(sizeof(*state->changed), FIELD_WIDTH);
+		int *move = minimax(state, predictions, your_botid, depth, SHRT_MIN + 1, SHRT_MAX);
 		fprintf(stderr, "%d\n", move[1]);
 		if (move[1] == -1) {
 			fprintf(stdout, "pass\n");
 		}
-		else if (move[1] < 360){
+		else if (move[1] < 288){
 			unsigned char x = index_to_x[move[1]];
 			unsigned char y = index_to_y[move[1]];
 			fprintf(stdout, "kill %d,%d\n", x, y);
 		}
 		else {
-			unsigned short birthIndex = move[1] % 360;
-			unsigned short kill1Index = (move[1] / 360 - 1) % 360;
-			unsigned short kill2Index = move[1] / 129600;
+			unsigned short birthIndex = move[1] % 288;
+			unsigned short kill1Index = (move[1] / 288) % 288;
+			unsigned short kill2Index = move[1] / 82944;
 			fprintf(stdout, "birth %d,%d %d,%d %d,%d\n",
 				index_to_x[birthIndex], index_to_y[birthIndex],
 				index_to_x[kill1Index], index_to_y[kill1Index],
@@ -47,13 +54,18 @@ void parse(FILE *input, struct State *state)
 		}
 		print(state);
 		fprintf(stderr, "Score: %d\n", move[0]);
-		for (int i = 0; i<depth; i++) {
+		for (int i = 0; i < depth; i++) {
 			int val = move[i + 1];
-			if (val >= 360)
-				val -= 360;
-			while (val != 0){
-				fprintf(stderr, "(%d,%d) ", (val%360)%(FIELD_WIDTH+2)-1, (val%360)/(FIELD_WIDTH+2)-1);
-				val /= 360;
+			if (val == -1) {
+				fprintf(stderr, "(pass)");
+			}
+			else {
+				if (val >= 288)
+					val -= 288;
+				while (val != 0) {
+					fprintf(stderr, "%d (%d,%d) ", val, (val % 288) % FIELD_WIDTH, (val % 288) / FIELD_WIDTH);
+					val /= 288;
+				}
 			}
 			fprintf(stderr, "\n");
 		}
@@ -75,7 +87,7 @@ void parse(FILE *input, struct State *state)
 						state->count0++;
 						int index = x + y*FIELD_WIDTH;
 						state->field[index] = 1;
-						unsigned short *adj = new_adjacent[index];
+						const unsigned short *adj = new_adjacent[index];
 						for (int i=0; i<adj[0]; i++){
 							state->neighbors[adj[i+1]]++;
 						}
@@ -90,7 +102,7 @@ void parse(FILE *input, struct State *state)
 						state->count1++;
 						int index = x + y*FIELD_WIDTH;
 						state->field[index] = 2;
-						unsigned short *adj = new_adjacent[index];
+						const unsigned short *adj = new_adjacent[index];
 						for (int i=0; i<adj[0]; i++){
 							state->neighbors[adj[i+1]] += 9;
 						}
