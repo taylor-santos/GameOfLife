@@ -11,16 +11,14 @@ unsigned char your_botid = 0;
 
 int main()
 {
-	extern int count[2][8][8];
-	extern int total[2][8][8];
-	extern int sum[2];
-	sum[0] = 0;
-	sum[1] = 0;
-	for (int a=0; a<2; a++){
-		for (int c = 0; c < 8; c++) {
-			for (int d = 0; d < 8; d++) {
-				count[a][c][d] = 0;
-				total[a][c][d] = 0;
+	/*
+	extern int count[2][9][9];
+	for (int a = 0; a<2; a++) {
+		for (int b = 0; b < 9; b++) {
+			for (int c = 0; c < 9; c++) {
+				for (int d = 0; d < 8; d++) {
+					count[a][b][c] = 0;
+				}
 			}
 		}
 	}
@@ -47,13 +45,13 @@ int main()
 			free_state(&predictions[i]);
 		free(predictions);
 		free(move);
-		for (int id=0; id<2; id++){
+		for (int id = 0; id<2; id++) {
 			int s = 0;
-			fprintf(stderr,"ID: %d (%d)\n",id, sum[id]);
-			for (int b = 0; b < 8; b++) {
-				for (int a = 0; a < 8; a++) {
-					double n = (double)(count[id][a][b]) / sum[id];
-					fprintf(stderr, "%f\t", n);
+			fprintf(stderr, "ID: %d\n", id);
+			for (int b = 0; b < 9; b++) {
+				for (int a = 0; a < 9; a++) {
+					int n = count[id][a][b];
+					fprintf(stderr, "%d\t", n);
 				}
 				fprintf(stderr, "\n");
 			}
@@ -61,10 +59,11 @@ int main()
 		}
 		free_state(&state);
 	}
-	/*
+	*/
+	struct State *state = instantiate_state();
 	while (true) {
 		parse(stdin, state);
 	}
-	*/
+	
 	return 0;
 }
