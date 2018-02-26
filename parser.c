@@ -25,7 +25,7 @@ void parse(FILE *input, struct State *state)
 		extern unsigned char your_botid;
 		clock_t t;
 		t = clock();
-		unsigned char depth = 5;
+		unsigned char depth = 4;
 		struct State **predictions = malloc(sizeof(*predictions) * depth);
 		predictions[0] = simulate(state);
 		for (int i = 1; i < depth; i++) {
@@ -73,15 +73,18 @@ void parse(FILE *input, struct State *state)
 		}
 		fflush(stdout);
 		free(move);
+		for (int i = 0; i < depth; i++)
+			free_state(&predictions[i]);
+		free(predictions);
 		t = clock() - t;
 		fprintf(stderr, "Time: %fms\n", (double)t / CLOCKS_PER_SEC * 1000.0);
 		free_state(&state);
 		state = instantiate_state();
-		extern int count[2][8][8];
-		extern int total[2][8][8];
+		extern int count[8][8];
+		extern int total[8][8];
 		for (int b = 0; b < 8; b++) {
 			for (int a = 0; a < 8; a++) {
-				double n = (double)(count[0][a][b] + count[1][b][a]) / (total[0][a][b]+total[1][b][a]);
+				double n = (double)(count[a][b]) / total[a][b];
 				fprintf(stderr, "%f\t", n);
 			}
 			fprintf(stderr, "\n");
