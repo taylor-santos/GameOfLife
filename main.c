@@ -11,17 +11,20 @@ unsigned char your_botid = 0;
 
 int main()
 {
-	extern int count[8][8];
-	extern int total[8][8];
-	extern int sum;
-	sum = 0;
-	for (int c = 0; c < 8; c++) {
-		for (int d = 0; d < 8; d++) {
-			count[c][d] = 0;
-			total[c][d] = 0;
+	extern int count[2][8][8];
+	extern int total[2][8][8];
+	extern int sum[2];
+	sum[0] = 0;
+	sum[1] = 0;
+	for (int a=0; a<2; a++){
+		for (int c = 0; c < 8; c++) {
+			for (int d = 0; d < 8; d++) {
+				count[a][c][d] = 0;
+				total[a][c][d] = 0;
+			}
 		}
 	}
-	for (int test = 0; test < 1000; test++) {
+	for (int test = 0; test < 10000; test++) {
 		struct State *state = instantiate_state();
 		for (int n = 0; n < 50; n++) {
 			int x = rand() % FIELD_WIDTH;
@@ -39,21 +42,23 @@ int main()
 		}
 		free(state->changed);
 		state->changed = calloc(sizeof(*state->changed), FIELD_WIDTH);
-		int *move = minimax(state, predictions, your_botid, depth, SHRT_MIN + 1, SHRT_MAX);
+		int *move = minimax(state, predictions, 0, depth, SHRT_MIN + 1, SHRT_MAX);
 		for (int i = 0; i < depth; i++)
 			free_state(&predictions[i]);
 		free(predictions);
 		free(move);
-		extern int count[8][8];
-		extern int total[8][8];
-		for (int b = 0; b < 8; b++) {
-			for (int a = 0; a < 8; a++) {
-				double n = (double)(count[a][b]) / sum;
-				fprintf(stderr, "%f\t", n);
+		for (int id=0; id<2; id++){
+			int s = 0;
+			fprintf(stderr,"ID: %d (%d)\n",id, sum[id]);
+			for (int b = 0; b < 8; b++) {
+				for (int a = 0; a < 8; a++) {
+					double n = (double)(count[id][a][b]) / sum[id];
+					fprintf(stderr, "%f\t", n);
+				}
+				fprintf(stderr, "\n");
 			}
 			fprintf(stderr, "\n");
 		}
-		fprintf(stderr, "\n");
 		free_state(&state);
 	}
 	/*

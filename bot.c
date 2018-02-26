@@ -11,9 +11,9 @@
 #include "definitions.h"
 #include "data.h"
 
-int count[8][8];
-int total[8][8];
-int sum;
+int count[2][8][8];
+int total[2][8][8];
+int sum[2];
 
 int *minimax(const struct State *state, const struct State **predictions, const unsigned char id, const unsigned char depth, int alpha, int beta)
 {
@@ -87,8 +87,8 @@ int *minimax(const struct State *state, const struct State **predictions, const 
 			next_predictions[j] = simulate_with_prediction(next_predictions[j - 1], predictions[j]);
 		}
 		if (depth == 4) {
-			total[state->neighbors[index] % 9][state->neighbors[index] / 9]++;
-			sum++;
+			total[!id][state->neighbors[index] % 9][state->neighbors[index] / 9]++;
+			//sum[!id]++;
 		}
 		int *result = minimax(next_predictions[0], next_predictions + 1, !id, depth - 1, -beta, -alpha);
 		for (int j = 0; j < depth; j++) {
@@ -127,8 +127,8 @@ int *minimax(const struct State *state, const struct State **predictions, const 
 			next_predictions[j] = simulate_with_prediction(next_predictions[j - 1], predictions[j]);
 		}
 		if (depth == 4) {
-			total[state->neighbors[index] % 9][state->neighbors[index] / 9]++;
-			sum++;
+			total[id][state->neighbors[index] % 9][state->neighbors[index] / 9]++;
+			//sum[id]++;
 		}
 		int *result = minimax(next_predictions[0], next_predictions + 1, !id, depth - 1, -beta, -alpha);
 		for (int j = 0; j < depth; j++) {
@@ -214,8 +214,12 @@ int *minimax(const struct State *state, const struct State **predictions, const 
 			best_sequence[i] = pass_result[i];
 	}
 	free(pass_result);
-	if (depth == 4 && best_sequence[0] != -1)
-		count[state->neighbors[best_sequence[0]] % 9][state->neighbors[best_sequence[0]] / 9]++;
+	if (depth == 4){
+		if ( best_sequence[0] != -1){
+			count[state->field[best_sequence[0]]-1][state->neighbors[best_sequence[0]] % 9][state->neighbors[best_sequence[0]] / 9]++;
+			sum[state->field[best_sequence[0]]-1]++;
+		}
+	}
 	int *move = malloc(sizeof(*move) * (depth + 1));
 	move[0] = best_score;
 	for (int i=0; i<depth; i++)
