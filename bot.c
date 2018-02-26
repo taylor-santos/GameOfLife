@@ -11,6 +11,9 @@
 #include "definitions.h"
 #include "data.h"
 
+int count[2][5][8][8];
+int total[2][5][8][8];
+
 int *minimax(const struct State *state, const struct State **predictions, const unsigned char id, const unsigned char depth, int alpha, int beta)
 {
 	//Returns a short array of length depth+1. minimax[0] = score, minimax[1:depth+1] = sequence of moves.
@@ -78,6 +81,7 @@ int *minimax(const struct State *state, const struct State **predictions, const 
 		for (int j = 1; j < depth; j++) {
 			next_predictions[j] = simulate_with_prediction(next_predictions[j - 1], predictions[j]);
 		}
+		total[id][depth][(next_predictions[0])->neighbors[index] % 9][(next_predictions[0])->neighbors[index] / 9]++;
 		int *result = minimax(next_predictions[0], next_predictions + 1, !id, depth - 1, -beta, -alpha);
 		for (int j = 0; j < depth; j++) {
 			free_state(&next_predictions[j]);
@@ -114,6 +118,7 @@ int *minimax(const struct State *state, const struct State **predictions, const 
 		for (int j = 1; j < depth; j++) {
 			next_predictions[j] = simulate_with_prediction(next_predictions[j - 1], predictions[j]);
 		}
+		total[id][depth][(next_predictions[0])->neighbors[index] % 9][(next_predictions[0])->neighbors[index] / 9]++;
 		int *result = minimax(next_predictions[0], next_predictions + 1, !id, depth - 1, -beta, -alpha);
 		for (int j = 0; j < depth; j++) {
 			free_state(&next_predictions[j]);
@@ -140,6 +145,7 @@ int *minimax(const struct State *state, const struct State **predictions, const 
 		}
 		free(result);
 	}
+	/*
 	for (int i = 0; i < open_index; i++) {
 		struct State *state1 = copy_state(state, false);
 		set_cell(state1, open_cells[i], id+1);
@@ -187,6 +193,7 @@ int *minimax(const struct State *state, const struct State **predictions, const 
 		}
 		free_state(&state1);
 	}
+	*/
 	int *pass_result = minimax(predictions[0], predictions + 1, !id, depth - 1, -beta, -alpha);
 	int pass_score = -pass_result[0];
 	if (pass_score > best_score) {
@@ -196,6 +203,8 @@ int *minimax(const struct State *state, const struct State **predictions, const 
 			best_sequence[i] = pass_result[i];
 	}
 	free(pass_result);
+	if (best_sequence[0] != -1)
+		count[id][depth][state->neighbors[best_sequence[0]] % 9][state->neighbors[best_sequence[0]] / 9]++;
 	int *move = malloc(sizeof(*move) * (depth + 1));
 	move[0] = best_score;
 	for (int i=0; i<depth; i++)
@@ -213,64 +222,8 @@ struct State *simulate(const struct State *state) {
 				if (state->changed[x] & index_mask[y]) {
 					unsigned char n = state->neighbors[index] + 81 * state->field[index];
 					char change = diff[n];
-					if (change != 0) {
-						new_state->field[index] += change;
-						const unsigned short *adj;
-						unsigned short m;
-						switch (change) {
-						case (-2):
-							new_state->count1--;
-							adj = new_adjacent[index];
-							for (int i = 0; i < adj[0]; i++) {
-								new_state->neighbors[adj[i + 1]] -= 9;
-							}
-							m = mask[y];
-							if (x > 0)
-								new_state->changed[x - 1] |= m;
-							new_state->changed[x] |= m;
-							if (x < FIELD_WIDTH - 1)
-								new_state->changed[x + 1] |= m;
-							break;
-						case (-1):
-							new_state->count0--;
-							adj = new_adjacent[index];
-							for (int i = 0; i < adj[0]; i++) {
-								new_state->neighbors[adj[i + 1]] -= 1;
-							}
-							m = mask[y];
-							if (x > 0)
-								new_state->changed[x - 1] |= m;
-							new_state->changed[x] |= m;
-							if (x < FIELD_WIDTH - 1)
-								new_state->changed[x + 1] |= m;
-							break;
-						case (1):
-							new_state->count0++;
-							adj = new_adjacent[index];
-							for (int i = 0; i < adj[0]; i++) {
-								new_state->neighbors[adj[i + 1]] += 1;
-							}
-							m = mask[y];
-							if (x > 0)
-								new_state->changed[x - 1] |= m;
-							new_state->changed[x] |= m;
-							if (x < FIELD_WIDTH - 1)
-								new_state->changed[x + 1] |= m;
-							break;
-						case (2):
-							new_state->count1++;
-							adj = new_adjacent[index];
-							for (int i = 0; i < adj[0]; i++) {
-								new_state->neighbors[adj[i + 1]] += 9;
-							}
-							m = mask[y];
-							if (x > 0)
-								new_state->changed[x - 1] |= m;
-							new_state->changed[x] |= m;
-							if (x < FIELD_WIDTH - 1)
-								new_state->changed[x + 1] |= m;
-							break;
-						}
+					if (change) {
+						set_cell(new_state, index, state->field[index] + change);
 					}
 				}
 			}

@@ -25,7 +25,7 @@ void parse(FILE *input, struct State *state)
 		extern unsigned char your_botid;
 		clock_t t;
 		t = clock();
-		unsigned char depth = 2;
+		unsigned char depth = 5;
 		struct State **predictions = malloc(sizeof(*predictions) * depth);
 		predictions[0] = simulate(state);
 		for (int i = 1; i < depth; i++) {
@@ -34,6 +34,7 @@ void parse(FILE *input, struct State *state)
 		free(state->changed);
 		state->changed = calloc(sizeof(*state->changed), FIELD_WIDTH);
 		int *move = minimax(state, predictions, your_botid, depth, SHRT_MIN + 1, SHRT_MAX);
+		fprintf(stderr, "\n");
 		fprintf(stderr, "%d\n", move[1]);
 		if (move[1] == -1) {
 			fprintf(stdout, "pass\n");
@@ -60,10 +61,11 @@ void parse(FILE *input, struct State *state)
 				fprintf(stderr, "(pass)");
 			}
 			else {
+				fprintf(stderr, "%d ", val);
 				if (val >= 288)
 					val -= 288;
 				while (val != 0) {
-					fprintf(stderr, "%d (%d,%d) ", val, (val % 288) % FIELD_WIDTH, (val % 288) / FIELD_WIDTH);
+					fprintf(stderr, "(%d,%d) ", (val % 288) % FIELD_WIDTH, (val % 288) / FIELD_WIDTH);
 					val /= 288;
 				}
 			}
@@ -75,6 +77,29 @@ void parse(FILE *input, struct State *state)
 		fprintf(stderr, "Time: %fms\n", (double)t / CLOCKS_PER_SEC * 1000.0);
 		free_state(&state);
 		state = instantiate_state();
+		extern int count[2][5][8][8];
+		extern int total[2][5][8][8];
+		for (int b = 0; b < 8; b++) {
+			for (int a = 0; a < 8; a++) {
+				fprintf(stderr, "(");
+				for (int id = 0; id < 2; id++) {
+					for (int d = 0; d < 5; d++) {
+						fprintf(stderr, "%d", count[id][depth][a][b]);
+						if (id < 1 || d < 4)
+							fprintf(stderr, "+");
+					}
+				}
+				fprintf(stderr, ")/(");
+				for (int id = 0; id < 2; id++) {
+					for (int d = 0; d < 5; d++) {
+						fprintf(stderr, "%d", total[id][depth][a][b]);
+						if (id < 1 || d < 4)
+							fprintf(stderr, "+");
+					}
+				}
+				fprintf(stderr, ")\n");
+			}
+		}
 	}
 	else if (strstr(buffer, "update") != NULL) {
 		if (strstr(buffer, "field") != NULL) {
