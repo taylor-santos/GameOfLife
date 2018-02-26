@@ -49,12 +49,19 @@ int *minimax(const struct State *state, const struct State **predictions, const 
 		best_sequence[i] = -1;
 	}
 	unsigned short priority1_cells[288];
-	//unsigned short priority2_cells[288];
+	unsigned short priority2_cells[288];
 	unsigned short owned_cells[288];
 	unsigned short enemy_cells[288];
-	unsigned short  open_cells[288];
+	unsigned short priority_kill_cells[288];
+	unsigned short pk = 0;
+	unsigned short non_priority_kill_cells[288];
+	unsigned short npk = 0;
+	unsigned short priority_birth_cells[288];
+	unsigned short pb = 0;
+	unsigned short non_priority_birth_cells[288];
+	unsigned short npb = 0;
 	unsigned short priority1_index = 0;
-	//unsigned short priority2_index = 0;
+	unsigned short priority2_index = 0;
 	unsigned short owned_index = 0;
 	unsigned short enemy_index = 0;
 	unsigned short  open_index = 0;
@@ -69,10 +76,19 @@ int *minimax(const struct State *state, const struct State **predictions, const 
 				unsigned char n1 = state->neighbors[index] / 9;
 				
 				if (owner == 0) {
-					open_cells[open_index++] = index;
+					if (n0 == 1 && n1 == 1){
+						priority_birth_cells[pb++] = index;
+					}else{
+						non_priority_birth_cells[npb++] = index;
+					}
 				}
 				else if (owner == id + 1) {
 					owned_cells[owned_index++] = index;
+					//if (n0 == 1 && n1 == 1){
+					//	priority_kill_cells[pk++] = index;
+					//}else{
+						non_priority_kill_cells[npk++] = index;
+					//}
 				}
 				else {
 					if (owner == 1 && n0 == 0 && n1 == 2) {
@@ -81,6 +97,12 @@ int *minimax(const struct State *state, const struct State **predictions, const 
 					else if (owner == 2 && n1 == 0 && n0 == 2) {
 						priority1_cells[priority1_index++] = index;
 					}
+					/*else if (owner == 1 && n0 == 2 && n1 == 1) {
+						priority2_cells[priority2_index++] = index;
+					}
+					else if (owner == 2 && n1 == 2 && n0 == 1) {
+						priority2_cells[priority2_index++] = index;
+					}*/
 					else {
 						enemy_cells[enemy_index++] = index;
 					}
@@ -90,8 +112,72 @@ int *minimax(const struct State *state, const struct State **predictions, const 
 	}
 	//bool is_priority = false;
 
-	unsigned short cutoff_cells[288];
-	unsigned short cutoff_index = 0;
+	//unsigned short cutoff_cells[288];
+	//unsigned short cutoff_index = 0;
+	
+	for (int i = 0; i < pb+npb; i++) {
+		int birth_index;
+		if (i >= pb)
+			birth_index = non_priority_birth_cells[i - pb];
+		else
+			birth_index = priority_birth_cells[i];
+		struct State *state1 = copy_state(state, false);
+		set_cell(state1, birth_index, id+1);
+		for (int j = 0; j < pk+npk; j++) {
+			int kill_index1;
+			if (j >= pk)
+				kill_index1 = non_priority_kill_cells[j - pk];
+			else
+				kill_index1 = priority_kill_cells[j];
+			
+			struct State *state2 = copy_state(state1, true);
+			set_cell(state2, kill_index1, 0);
+			for (int k = j + 1; k < pk+npk; k++) {
+				int kill_index2;
+				if (k >= pk)
+					kill_index2 = non_priority_kill_cells[k - pk];
+				else
+					kill_index2 = priority_kill_cells[k];
+				struct State *state3 = copy_state(state2, true);
+				set_cell(state3, kill_index2, 0);
+				struct State **next_predictions = malloc(sizeof(*next_predictions) * depth);
+				next_predictions[0] = simulate_with_prediction(state3, predictions[0]);
+				free_state(&state3);
+				for (int n = 1; n < depth; n++) {
+					next_predictions[n] = simulate_with_prediction(next_predictions[n - 1], predictions[n]);
+				}
+				int *result = minimax(next_predictions[0], next_predictions + 1, !id, depth - 1, -beta, -alpha);
+				for (int n = 0; n < depth; n++) {
+					free_state(&next_predictions[n]);
+				}
+				free(next_predictions);
+				int score = -result[0];
+				if (score > best_score) {
+					best_score = score;
+					best_sequence[0] = birth_index + 288 + 288 * kill_index1 + 82944 * kill_index2;
+					for (int n = 1; n<depth; n++)
+						best_sequence[n] = (int)result[n];
+				}
+				if (score > alpha) {
+					alpha = score;
+				}
+				if (beta <= alpha) {
+					free(best_sequence);
+					int *move = malloc(sizeof(*move) *(depth + 1));
+					move[0] = beta;
+					for (int n = 1; n<depth + 1; n++)
+						move[n] = -3;
+					free(result);
+					free_state(&state2);
+					free_state(&state1);
+					return move;
+				}
+				free(result);
+			}
+			free_state(&state2);
+		}
+		free_state(&state1);
+	}
 	for (int i = 0; i < priority1_index; i++) {
 		unsigned short index = priority1_cells[i];
 		struct State *new_state = copy_state(state, false);
@@ -109,8 +195,8 @@ int *minimax(const struct State *state, const struct State **predictions, const 
 		free(next_predictions);
 		int score = -result[0];
 		if (score > best_score) {
-			cutoff_index = 0;
-			cutoff_cells[cutoff_index++] = index;
+			//cutoff_index = 0;
+			//cutoff_cells[cutoff_index++] = index;
 			//is_priority = true;
 			best_score = score;
 			best_sequence[0] = index;
@@ -156,14 +242,11 @@ int *minimax(const struct State *state, const struct State **predictions, const 
 		if (score > best_score) {
 			cutoff_index = 0;
 			cutoff_cells[cutoff_index++] = index;
-			is_priority = true;
+			//is_priority = true;
 			best_score = score;
 			best_sequence[0] = index;
 			for (int n = 1; n < depth; n++)
 				best_sequence[n] = (int)result[n];
-		}
-		else if (score == best_score) {
-			cutoff_cells[cutoff_index++] = index;
 		}
 		if (score > alpha) {
 			alpha = score;
@@ -197,8 +280,8 @@ int *minimax(const struct State *state, const struct State **predictions, const 
 		free(next_predictions);
 		int score = -result[0];
 		if (score > best_score) {
-			cutoff_index = 0;
-			cutoff_cells[cutoff_index++] = index;
+			//cutoff_index = 0;
+			//cutoff_cells[cutoff_index++] = index;
 			//is_priority = true;
 			best_score = score;
 			best_sequence[0] = index;
@@ -241,8 +324,8 @@ int *minimax(const struct State *state, const struct State **predictions, const 
 		free(next_predictions);
 		int score = -result[0];
 		if (score > best_score) {
-			cutoff_index = 0;
-			cutoff_cells[cutoff_index++] = index;
+			//cutoff_index = 0;
+			//cutoff_cells[cutoff_index++] = index;
 			//is_priority = true;
 			best_score = score;
 			best_sequence[0] = index;
@@ -269,54 +352,14 @@ int *minimax(const struct State *state, const struct State **predictions, const 
 		free(result);
 	}
 	/*
-	for (int i = 0; i < open_index; i++) {
-		struct State *state1 = copy_state(state, false);
-		set_cell(state1, open_cells[i], id+1);
-		for (int j = 0; j < owned_index; j++) {
-			struct State *state2 = copy_state(state1, true);
-			set_cell(state2, owned_cells[j], 0);
-			for (int k = j + 1; k < owned_index; k++) {
-				struct State *state3 = copy_state(state2, true);
-				set_cell(state3, owned_cells[k], 0);
-				struct State **next_predictions = malloc(sizeof(*next_predictions) * depth);
-				next_predictions[0] = simulate_with_prediction(state3, predictions[0]);
-				free_state(&state3);
-				for (int n = 1; n < depth; n++) {
-					next_predictions[n] = simulate_with_prediction(next_predictions[n - 1], predictions[n]);
-				}
-				int *result = minimax(next_predictions[0], next_predictions + 1, !id, depth - 1, -beta, -alpha);
-				for (int n = 0; n < depth; n++) {
-					free_state(&next_predictions[n]);
-				}
-				free(next_predictions);
-				int score = -result[0];
-				if (score > best_score) {
-					best_score = score;
-					best_sequence[0] = open_cells[i] + 288 + 288 * owned_cells[j] + 82944 * owned_cells[k];
-					for (int n = 1; n<depth; n++)
-						best_sequence[n] = (int)result[n];
-				}
-				if (score > alpha) {
-					alpha = score;
-				}
-				if (beta <= alpha) {
-					free(best_sequence);
-					int *move = malloc(sizeof(*move) *(depth + 1));
-					move[0] = beta;
-					for (int n = 1; n<depth + 1; n++)
-						move[n] = -3;
-					free(result);
-					free_state(&state2);
-					free_state(&state1);
-					return move;
-				}
-				free(result);
-			}
-			free_state(&state2);
-		}
-		free_state(&state1);
+	int cutoff_k[288];
+	int cutoff_b[288];
+	for (int i=0; i<288; i++){
+		cutoff_k[i] = 0;
+		cutoff_b[i] = 0;
 	}
 	*/
+	
 	int *pass_result = minimax(predictions[0], predictions + 1, !id, depth - 1, -beta, -alpha);
 	int pass_score = -pass_result[0];
 	if (pass_score > best_score) {
@@ -333,24 +376,29 @@ int *minimax(const struct State *state, const struct State **predictions, const 
 		fprintf(stderr, "False\n");
 	*/
 	/*
-	for (int i = 0; i < cutoff_index; i++) {
-		int index = cutoff_cells[i];
-		int cutoff_id = state->field[index] - 1;
-		if (id == 0) {
-			if (cutoff_id == 0)
-				count[0][state->neighbors[index] % 9][state->neighbors[index] / 9]++;
-			else
-				count[1][state->neighbors[index] % 9][state->neighbors[index] / 9]++;
+	for (int i = 0; i < 288; i++) {
+		if (cutoff_k[i]){
+			int mul = cutoff_k[i];
+			int index = i;
+			if (id == 0) {
+				count[0][state->neighbors[index] % 9][state->neighbors[index] / 9] += mul;
+			}
+			else {
+				count[0][state->neighbors[index] / 9][state->neighbors[index] % 9] += mul;
+			}
 		}
-		else {
-			if (cutoff_id == 1)
-				count[0][state->neighbors[index] / 9][state->neighbors[index] % 9]++;
-			else
-				count[1][state->neighbors[index] / 9][state->neighbors[index] % 9]++;
+		if (cutoff_b[i]){
+			int mul = cutoff_b[i];
+			int index = i;
+			if (id == 0) {
+				count[1][state->neighbors[index] % 9][state->neighbors[index] / 9] += mul;
+			}
+			else {
+				count[1][state->neighbors[index] / 9][state->neighbors[index] % 9] += mul;
+			}
 		}
 	}
 	*/
-
 	free(pass_result);
 	int *move = malloc(sizeof(*move) * (depth + 1));
 	move[0] = best_score;

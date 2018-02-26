@@ -25,7 +25,7 @@ void parse(FILE *input, struct State *state)
 		extern unsigned char your_botid;
 		clock_t t;
 		t = clock();
-		unsigned char depth = 4;
+		unsigned char depth = 2;
 		struct State **predictions = malloc(sizeof(*predictions) * depth);
 		predictions[0] = simulate(state);
 		for (int i = 1; i < depth; i++) {
