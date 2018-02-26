@@ -77,29 +77,16 @@ void parse(FILE *input, struct State *state)
 		fprintf(stderr, "Time: %fms\n", (double)t / CLOCKS_PER_SEC * 1000.0);
 		free_state(&state);
 		state = instantiate_state();
-		extern int count[2][5][8][8];
-		extern int total[2][5][8][8];
+		extern int count[2][8][8];
+		extern int total[2][8][8];
 		for (int b = 0; b < 8; b++) {
 			for (int a = 0; a < 8; a++) {
-				fprintf(stderr, "(");
-				for (int id = 0; id < 2; id++) {
-					for (int d = 0; d < 5; d++) {
-						fprintf(stderr, "%d", count[id][depth][a][b]);
-						if (id < 1 || d < 4)
-							fprintf(stderr, "+");
-					}
-				}
-				fprintf(stderr, ")/(");
-				for (int id = 0; id < 2; id++) {
-					for (int d = 0; d < 5; d++) {
-						fprintf(stderr, "%d", total[id][depth][a][b]);
-						if (id < 1 || d < 4)
-							fprintf(stderr, "+");
-					}
-				}
-				fprintf(stderr, ")\n");
+				double n = (double)(count[0][a][b] + count[1][b][a]) / (total[0][a][b]+total[1][b][a]);
+				fprintf(stderr, "%f\t", n);
 			}
+			fprintf(stderr, "\n");
 		}
+		fprintf(stderr,"\n");
 	}
 	else if (strstr(buffer, "update") != NULL) {
 		if (strstr(buffer, "field") != NULL) {

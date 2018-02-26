@@ -11,8 +11,8 @@
 #include "definitions.h"
 #include "data.h"
 
-int count[2][5][8][8];
-int total[2][5][8][8];
+int count[2][8][8];
+int total[2][8][8];
 
 int *minimax(const struct State *state, const struct State **predictions, const unsigned char id, const unsigned char depth, int alpha, int beta)
 {
@@ -81,7 +81,7 @@ int *minimax(const struct State *state, const struct State **predictions, const 
 		for (int j = 1; j < depth; j++) {
 			next_predictions[j] = simulate_with_prediction(next_predictions[j - 1], predictions[j]);
 		}
-		total[id][depth][(next_predictions[0])->neighbors[index] % 9][(next_predictions[0])->neighbors[index] / 9]++;
+		total[id][state->neighbors[index] % 9][state->neighbors[index] / 9]++;
 		int *result = minimax(next_predictions[0], next_predictions + 1, !id, depth - 1, -beta, -alpha);
 		for (int j = 0; j < depth; j++) {
 			free_state(&next_predictions[j]);
@@ -118,7 +118,7 @@ int *minimax(const struct State *state, const struct State **predictions, const 
 		for (int j = 1; j < depth; j++) {
 			next_predictions[j] = simulate_with_prediction(next_predictions[j - 1], predictions[j]);
 		}
-		total[id][depth][(next_predictions[0])->neighbors[index] % 9][(next_predictions[0])->neighbors[index] / 9]++;
+		total[id][state->neighbors[index] % 9][state->neighbors[index] / 9]++;
 		int *result = minimax(next_predictions[0], next_predictions + 1, !id, depth - 1, -beta, -alpha);
 		for (int j = 0; j < depth; j++) {
 			free_state(&next_predictions[j]);
@@ -204,7 +204,7 @@ int *minimax(const struct State *state, const struct State **predictions, const 
 	}
 	free(pass_result);
 	if (best_sequence[0] != -1)
-		count[id][depth][state->neighbors[best_sequence[0]] % 9][state->neighbors[best_sequence[0]] / 9]++;
+		count[id][state->neighbors[best_sequence[0]] % 9][state->neighbors[best_sequence[0]] / 9]++;
 	int *move = malloc(sizeof(*move) * (depth + 1));
 	move[0] = best_score;
 	for (int i=0; i<depth; i++)
