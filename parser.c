@@ -31,8 +31,6 @@ void parse(FILE *input, struct State *state)
 		for (int i = 1; i < depth; i++) {
 			predictions[i] = simulate(predictions[i - 1]);
 		}
-		free(state->changed);
-		state->changed = calloc(sizeof(*state->changed), FIELD_WIDTH);
 		int *move = minimax(state, predictions, your_botid, depth, SHRT_MIN + 1, SHRT_MAX);
 		fprintf(stderr, "\n");
 		fprintf(stderr, "%d\n", move[1]);

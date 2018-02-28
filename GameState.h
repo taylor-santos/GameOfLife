@@ -15,6 +15,7 @@ struct State
 struct State *instantiate_state();
 void free_state(struct State **state);
 struct State *copy_state(const struct State *state, const bool copy_changes);
+void copy_into(const struct State *state, const bool copy_changes, struct State *result);
 void set_cell(struct State *state, const unsigned short index, const unsigned char value);
 void print(const struct State *state);
 bool verify(const struct State *state);

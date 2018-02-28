@@ -46,12 +46,27 @@ struct State *copy_state(const struct State *state, const bool copy_changes)
 	return new_state;
 }
 
+void copy_into(const struct State *state, const bool copy_changes, struct State *result)
+{
+	result->count0 = state->count0;
+	result->count1 = state->count1;
+	memcpy(result->field, state->field, sizeof(*result->field)*FIELD_WIDTH*FIELD_HEIGHT);
+	memcpy(result->neighbors, state->neighbors, sizeof(*result->neighbors)*FIELD_WIDTH*FIELD_HEIGHT);
+	if (copy_changes) {
+		memcpy(result->changed, state->changed, sizeof(*result->changed) * FIELD_WIDTH);
+	}
+	else {
+		for (int i = 0; i < FIELD_WIDTH; i++)
+			result->changed[i] = 0;
+	}
+}
+
 void set_cell(struct State *state, const unsigned short index, const unsigned char value)
 {
 	unsigned char old = state->field[index];
 	state->field[index] = value;
-	unsigned char x = index % FIELD_WIDTH;
-	unsigned char y = index / FIELD_WIDTH;
+	unsigned char x = index_to_x[index];
+	unsigned char y = index_to_y[index];
 	if (old && value) {
 		if (old != value) {
 			if (old == 1) {
