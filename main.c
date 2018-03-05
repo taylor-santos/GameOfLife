@@ -11,6 +11,14 @@ unsigned char your_botid = 0;
 
 int main()
 {
+	extern int count[5][5][5];
+	for (int i=0; i<5; i++){
+		for (int j=0; j<5; j++){
+			for (int k=0; k<5; k++){
+				count[i][j][k] = 0;
+			}
+		}
+	}
 	/*
 	extern int count[2][9][9];
 	for (int a = 0; a<2; a++) {
@@ -22,6 +30,7 @@ int main()
 			}
 		}
 	}
+	*/
 	for (int test = 0; test < 10000; test++) {
 		struct State *state = instantiate_state();
 		for (int n = 0; n < 50; n++) {
@@ -40,29 +49,27 @@ int main()
 		}
 		free(state->changed);
 		state->changed = calloc(sizeof(*state->changed), FIELD_WIDTH);
-		int *move = minimax(state, predictions, 0, depth, SHRT_MIN + 1, SHRT_MAX);
+		int *move = minimax(state, (const struct State **)predictions, 0, depth, SHRT_MIN + 1, SHRT_MAX);
 		for (int i = 0; i < depth; i++)
 			free_state(&predictions[i]);
 		free(predictions);
 		free(move);
-		for (int id = 0; id<2; id++) {
-			int s = 0;
-			fprintf(stderr, "ID: %d\n", id);
-			for (int b = 0; b < 9; b++) {
-				for (int a = 0; a < 9; a++) {
-					int n = count[id][a][b];
-					fprintf(stderr, "%d\t", n);
+		for (int k=0; k<5; k++){
+			for (int i=0; i<5; i++){
+				for (int j=0; j<5; j++){
+					fprintf(stderr, "%d ", count[i][j][k]);
 				}
-				fprintf(stderr, "\n");
+				fprintf(stderr, "\t");
 			}
 			fprintf(stderr, "\n");
 		}
-		free_state(&state);
+		fprintf(stderr, "\n");
 	}
-	*/
+	/*
 	struct State *state = instantiate_state();
 	while (true) {
 		parse(stdin, state);
 	}
+	*/
 	return 0;
 }

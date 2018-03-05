@@ -31,7 +31,7 @@ void parse(FILE *input, struct State *state)
 		for (int i = 1; i < depth; i++) {
 			predictions[i] = simulate(predictions[i - 1]);
 		}
-		int *move = minimax(state, predictions, your_botid, depth, SHRT_MIN + 1, SHRT_MAX);
+		int *move = minimax(state, (const struct State **)predictions, your_botid, depth, SHRT_MIN + 1, SHRT_MAX);
 		fprintf(stderr, "\n");
 		fprintf(stderr, "%d\n", move[1]);
 		if (move[1] == -1) {
@@ -76,6 +76,13 @@ void parse(FILE *input, struct State *state)
 		free(predictions);
 		t = clock() - t;
 		fprintf(stderr, "Time: %fms\n", (double)t / CLOCKS_PER_SEC * 1000.0);
+		extern int count[3][5];
+		for (int y=0;y<3;y++){
+			for (int x=0; x<5; x++){
+				fprintf(stderr, "%d ", count[y][x]);
+			}
+			fprintf(stderr, "\n");
+		}
 		free_state(&state);
 		state = instantiate_state();
 	}

@@ -72,7 +72,7 @@ void set_cell(struct State *state, const unsigned short index, const unsigned ch
 			if (old == 1) {
 				state->count0--;
 				state->count1++;
-				unsigned short *adj = new_adjacent[index];
+				const unsigned short *adj = new_adjacent[index];
 				for (int i = 0; i<adj[0]; i++) {
 					state->neighbors[adj[i + 1]] += 8;
 				}
@@ -86,7 +86,7 @@ void set_cell(struct State *state, const unsigned short index, const unsigned ch
 			else if (old == 2) {
 				state->count0++;
 				state->count1--;
-				unsigned short *adj = new_adjacent[index];
+				const unsigned short *adj = new_adjacent[index];
 				for (int i = 0; i<adj[0]; i++) {
 					state->neighbors[adj[i + 1]] -= 8;
 				}
@@ -101,7 +101,7 @@ void set_cell(struct State *state, const unsigned short index, const unsigned ch
 	}
 	else if (old == 1) {
 		state->count0--;
-		unsigned short *adj = new_adjacent[index];
+		const unsigned short *adj = new_adjacent[index];
 		for (int i = 0; i<adj[0]; i++) {
 			state->neighbors[adj[i + 1]] -= 1;
 		}
@@ -114,7 +114,7 @@ void set_cell(struct State *state, const unsigned short index, const unsigned ch
 	}
 	else if (old == 2) {
 		state->count1--;
-		unsigned short *adj = new_adjacent[index];
+		const unsigned short *adj = new_adjacent[index];
 		for (int i = 0; i<adj[0]; i++) {
 			state->neighbors[adj[i + 1]] -= 9;
 		}
@@ -127,7 +127,7 @@ void set_cell(struct State *state, const unsigned short index, const unsigned ch
 	}
 	else if (value == 1) {
 		state->count0++;
-		unsigned short *adj = new_adjacent[index];
+		const unsigned short *adj = new_adjacent[index];
 		for (int i = 0; i<adj[0]; i++) {
 			state->neighbors[adj[i + 1]] += 1;
 		}
@@ -140,7 +140,7 @@ void set_cell(struct State *state, const unsigned short index, const unsigned ch
 	}
 	else if (value == 2) {
 		state->count1++;
-		unsigned short *adj = new_adjacent[index];
+		const unsigned short *adj = new_adjacent[index];
 		for (int i = 0; i<adj[0]; i++) {
 			state->neighbors[adj[i + 1]] += 9;
 		}
