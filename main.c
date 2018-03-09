@@ -12,28 +12,37 @@ unsigned char your_botid = 0;
 
 int main()
 {
-	extern int count[2][7][15];
-	for (int i=0; i<2; i++){
-		for (int j=0; j<7; j++){
-			for (int k=0; k<15; k++){
-				count[i][j][k] = 0;
-			}
-		}
-	}
 	/*
-	extern int count[2][9][9];
-	for (int a = 0; a<2; a++) {
-		for (int b = 0; b < 9; b++) {
-			for (int c = 0; c < 9; c++) {
-				for (int d = 0; d < 8; d++) {
-					count[a][b][c] = 0;
+	extern int count[2][8][8][8][8][8][8][8];
+	for (int a=0; a<2; a++){
+		for (int b=0;b<8;b++){
+			for (int c=0;c<8;c++){
+				for (int d=0;d<8;d++){
+					for (int e=0; e<8; e++){
+						for (int f=0; f<8; f++){
+							for (int g=0; g<8; g++){
+								for (int h=0; h<8; h++){
+									count[a][b][c][d][e][f][g][h] = 0;
+								}
+							}
+						}
+					}
 				}
 			}
 		}
 	}
 	*/
-	/*
-	for (int test = 0; test < 10000; test++) {
+	srand(time(NULL));
+	
+	extern int count[8][8];
+	extern int total[8][8];
+	for (int a=0; a<8; a++){
+		for (int b=0; b<8; b++){
+			count[a][b] = 0;
+			total[a][b] = 0;
+		}
+	}
+	for (int test = 0; test < 1000; test++) {
 		struct State *state = instantiate_state();
 		for (int n = 0; n < 50; n++) {
 			int x = rand() % FIELD_WIDTH;
@@ -74,23 +83,26 @@ int main()
 			free_state(&predictions[i]);
 		free(predictions);
 		free(move);
-		
-		for (int k=0; k<5; k++){
-			for (int i=0; i<5; i++){
-				for (int j=0; j<5; j++){
-					fprintf(stderr, "%d ", count[i][j][k]);
-				}
-				fprintf(stderr, "\t");
+		for (int y=0; y<8; y++){
+			for (int x=0; x<8; x++){
+				fprintf(stderr, "%d\t", count[x][y]);
+			}
+			fprintf(stderr, "\n");
+		}
+		fprintf(stderr, "\n");
+		for (int y=0; y<8; y++){
+			for (int x=0; x<8; x++){
+				fprintf(stderr, "%d\t", total[x][y]);
 			}
 			fprintf(stderr, "\n");
 		}
 		fprintf(stderr, "\n");
 	}
-	*/
-	
+	/*
 	struct State *state = instantiate_state();
 	while (true) {
 		parse(stdin, state);
 	}
+	*/
 	return 0;
 }

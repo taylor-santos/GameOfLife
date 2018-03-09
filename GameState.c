@@ -72,9 +72,8 @@ void set_cell(struct State *state, const unsigned short index, const unsigned ch
 			if (old == 1) {
 				state->count0--;
 				state->count1++;
-				const unsigned short *adj = new_adjacent[index];
-				for (int i = 0; i<adj[0]; i++) {
-					state->neighbors[adj[i + 1]] += 8;
+				for (int i = 0; i<new_adjacent[index][0]; i++) {
+					state->neighbors[new_adjacent[index][i + 1]] += 8;
 				}
 				unsigned short m = mask[y];
 				if (x > 0)
@@ -86,9 +85,8 @@ void set_cell(struct State *state, const unsigned short index, const unsigned ch
 			else if (old == 2) {
 				state->count0++;
 				state->count1--;
-				const unsigned short *adj = new_adjacent[index];
-				for (int i = 0; i<adj[0]; i++) {
-					state->neighbors[adj[i + 1]] -= 8;
+				for (int i = 0; i<new_adjacent[index][0]; i++) {
+					state->neighbors[new_adjacent[index][i + 1]] -= 8;
 				}
 				unsigned short m = mask[y];
 				if (x > 0)
@@ -101,9 +99,8 @@ void set_cell(struct State *state, const unsigned short index, const unsigned ch
 	}
 	else if (old == 1) {
 		state->count0--;
-		const unsigned short *adj = new_adjacent[index];
-		for (int i = 0; i<adj[0]; i++) {
-			state->neighbors[adj[i + 1]] -= 1;
+		for (int i = 0; i<new_adjacent[index][0]; i++) {
+			state->neighbors[new_adjacent[index][i + 1]] -= 1;
 		}
 		unsigned short m = mask[y];
 		if (x > 0)
@@ -114,9 +111,8 @@ void set_cell(struct State *state, const unsigned short index, const unsigned ch
 	}
 	else if (old == 2) {
 		state->count1--;
-		const unsigned short *adj = new_adjacent[index];
-		for (int i = 0; i<adj[0]; i++) {
-			state->neighbors[adj[i + 1]] -= 9;
+		for (int i = 0; i<new_adjacent[index][0]; i++) {
+			state->neighbors[new_adjacent[index][i + 1]] -= 9;
 		}
 		unsigned short m = mask[y];
 		if (x > 0)
@@ -127,9 +123,8 @@ void set_cell(struct State *state, const unsigned short index, const unsigned ch
 	}
 	else if (value == 1) {
 		state->count0++;
-		const unsigned short *adj = new_adjacent[index];
-		for (int i = 0; i<adj[0]; i++) {
-			state->neighbors[adj[i + 1]] += 1;
+		for (int i = 0; i<new_adjacent[index][0]; i++) {
+			state->neighbors[new_adjacent[index][i + 1]] += 1;
 		}
 		unsigned short m = mask[y];
 		if (x > 0)
@@ -140,9 +135,8 @@ void set_cell(struct State *state, const unsigned short index, const unsigned ch
 	}
 	else if (value == 2) {
 		state->count1++;
-		const unsigned short *adj = new_adjacent[index];
-		for (int i = 0; i<adj[0]; i++) {
-			state->neighbors[adj[i + 1]] += 9;
+		for (int i = 0; i<new_adjacent[index][0]; i++) {
+			state->neighbors[new_adjacent[index][i + 1]] += 9;
 		}
 		unsigned short m = mask[y];
 		if (x > 0)
