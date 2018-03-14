@@ -32,8 +32,13 @@ int main()
 		}
 	}
 	*/
+	clock_t t;
+	clock_t max = 0;
+	clock_t min = INT_MAX;
+	t = clock();
+	unsigned int n = 0;
 	srand(time(NULL));
-	
+	/*
 	extern int count[8][8];
 	extern int total[8][8];
 	for (int a=0; a<8; a++){
@@ -42,7 +47,10 @@ int main()
 			total[a][b] = 0;
 		}
 	}
-	for (int test = 0; test < 1000; test++) {
+	*/
+	/*
+	for (int test = 0; test < 100000; test++) {
+		clock_t t1 = clock();
 		struct State *state = instantiate_state();
 		for (int n = 0; n < 50; n++) {
 			int x = rand() % FIELD_WIDTH;
@@ -79,10 +87,12 @@ int main()
 				index_to_x[kill1Index], index_to_y[kill1Index],
 				index_to_x[kill2Index], index_to_y[kill1Index]);
 		}
+		
 		for (int i = 0; i < depth; i++)
 			free_state(&predictions[i]);
 		free(predictions);
 		free(move);
+		
 		for (int y=0; y<8; y++){
 			for (int x=0; x<8; x++){
 				fprintf(stderr, "%d\t", count[x][y]);
@@ -97,12 +107,31 @@ int main()
 			fprintf(stderr, "\n");
 		}
 		fprintf(stderr, "\n");
+		
+		clock_t t2 = clock() - t1;
+		t += t2;
+		n++;
+		//max = t2 > max ? t2 : max;
+		if (t2 > max){
+			max = t2;
+			print(state);
+			fprintf(stderr, "Time: %fms\n", (double)t / CLOCKS_PER_SEC * 1000.0 / n);
+			fprintf(stderr, "Max:  %fms\n", (double)max / CLOCKS_PER_SEC * 1000.0);
+			fprintf(stderr, "%d\n", n);
+		}
+		min = t2 < min ? t2 : min;
+		
+		fprintf(stderr, "Time: %fms\n", (double)t / CLOCKS_PER_SEC * 1000.0 / n);
+		fprintf(stderr, "Max:  %fms\n", (double)max / CLOCKS_PER_SEC * 1000.0);
+		fprintf(stderr, "Min:  %fms\n", (double)min / CLOCKS_PER_SEC * 1000.0);
+		
+		free_state(&state);
 	}
-	/*
+	*/
+	
 	struct State *state = instantiate_state();
 	while (true) {
 		parse(stdin, state);
 	}
-	*/
 	return 0;
 }

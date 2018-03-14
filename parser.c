@@ -76,7 +76,7 @@ void parse(FILE *input, struct State *state)
 		free(predictions);
 		t = clock() - t;
 		fprintf(stderr, "Time: %fms\n", (double)t / CLOCKS_PER_SEC * 1000.0);
-		
+		/*
 		extern int count[8][8];
 		for (int y=0; y<8; y++){
 			for (int x=0; x<8; x++){
@@ -85,7 +85,7 @@ void parse(FILE *input, struct State *state)
 			fprintf(stderr, "\n");
 		}
 		fprintf(stderr, "\n");
-		
+		*/
 		free_state(&state);
 		state = instantiate_state();
 	}
