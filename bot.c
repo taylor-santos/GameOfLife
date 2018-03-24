@@ -184,25 +184,25 @@ int *minimax(const struct State *state, const struct State **predictions, const 
 	struct State *next_state = copy_state(state, false);
 	
 	for (int i = 0; i < birth_count; i++) {
-		int curr_index = i;
-		int n_i;
+		short curr_index = i;
+		short n_i;
 		for (n_i = 0; birth_index[n_i] <= curr_index; n_i++)
 			curr_index -= birth_index[n_i];
-		int birth_i = birth_cells[n_i][curr_index];
+		short birth_i = birth_cells[n_i][curr_index];
 		for (int j = 0; j < kill_count-1; j++) {
 			curr_index = j;
-			int n_j;
+			short n_j;
 			for (n_j = 0; kill_index[n_j] <= curr_index; n_j++)
 				curr_index -= kill_index[n_j];
-			int kill_j = kill_cells[n_j][curr_index];
+			short kill_j = kill_cells[n_j][curr_index];
 			unsigned char kill_cell_j = state->field[kill_j];
 			for (int k = j + 1; k < kill_count; k++) {
 				curr_index = k;
 
-				int n_k;
+				short n_k;
 				for (n_k = 0; kill_index[n_k] <= curr_index; n_k++)
 					curr_index -= kill_index[n_k];
-				int kill_k = kill_cells[n_k][curr_index];
+				short kill_k = kill_cells[n_k][curr_index];
 				unsigned char kill_cell_k = state->field[kill_k];
 				set_cell(next_state, birth_i, id + 1);
 				set_cell(next_state, kill_j, 0);

@@ -22,72 +22,82 @@ void parse(FILE *input, struct State *state)
 		exit(BAD_DATA);
 	}
 	if (strstr(buffer, "action") != NULL) {	
-		extern unsigned char your_botid;
-		clock_t t;
-		t = clock();
-		unsigned char depth = 2;
-		struct State **predictions = malloc(sizeof(*predictions) * depth);
-		predictions[0] = simulate(state);
-		for (int i = 1; i < depth; i++) {
-			predictions[i] = simulate(predictions[i - 1]);
-		}
-		int *move = minimax(state, (const struct State **)predictions, your_botid, depth, SHRT_MIN + 1, SHRT_MAX);
-		fprintf(stderr, "\n");
-		fprintf(stderr, "%d\n", move[1]);
-		if (move[1] == -1) {
-			fprintf(stdout, "pass\n");
-		}
-		else if (move[1] < 288){
-			unsigned char x = index_to_x[move[1]];
-			unsigned char y = index_to_y[move[1]];
-			fprintf(stdout, "kill %d,%d\n", x, y);
-		}
-		else {
-			unsigned short birthIndex = move[1] % 288;
-			unsigned short kill1Index = (move[1] / 288) % 288;
-			unsigned short kill2Index = move[1] / 82944;
-			fprintf(stdout, "birth %d,%d %d,%d %d,%d\n",
-				index_to_x[birthIndex], index_to_y[birthIndex],
-				index_to_x[kill1Index], index_to_y[kill1Index],
-				index_to_x[kill2Index], index_to_y[kill1Index]);
-		}
-		print(state);
-		fprintf(stderr, "Score: %d\n", move[0]);
-		for (int i = 0; i < depth; i++) {
-			int val = move[i + 1];
-			if (val == -1) {
-				fprintf(stderr, "(pass)");
+		while (state->count0 != 0 && state->count1 != 0){
+			extern unsigned char your_botid;
+			clock_t t;
+			t = clock();
+			unsigned char depth = 2;
+			struct State **predictions = malloc(sizeof(*predictions) * depth);
+			predictions[0] = simulate(state);
+			for (int i = 1; i < depth; i++) {
+				predictions[i] = simulate(predictions[i - 1]);
+			}
+			int *move = minimax(state, (const struct State **)predictions, your_botid, depth, SHRT_MIN + 1, SHRT_MAX);
+			fprintf(stderr, "\n");
+			fprintf(stderr, "%d\n", move[1]);
+			if (move[1] == -1) {
+				fprintf(stdout, "pass\n");
+			}
+			else if (move[1] < 288){
+				unsigned char x = index_to_x[move[1]];
+				unsigned char y = index_to_y[move[1]];
+				fprintf(stdout, "kill %d,%d\n", x, y);
+				set_cell(state, move[1], 0);
 			}
 			else {
-				fprintf(stderr, "%d ", val);
-				if (val >= 288)
-					val -= 288;
-				while (val != 0) {
-					fprintf(stderr, "(%d,%d) ", (val % 288) % FIELD_WIDTH, (val % 288) / FIELD_WIDTH);
-					val /= 288;
+				unsigned short birthIndex = move[1] % 288;
+				unsigned short kill1Index = (move[1] / 288) % 288;
+				unsigned short kill2Index = move[1] / 82944;
+				fprintf(stdout, "birth %d,%d %d,%d %d,%d\n",
+					index_to_x[birthIndex], index_to_y[birthIndex],
+					index_to_x[kill1Index], index_to_y[kill1Index],
+					index_to_x[kill2Index], index_to_y[kill2Index]);
+				set_cell(state, birthIndex, your_botid+1);
+				set_cell(state, kill1Index, 0);
+				set_cell(state, kill2Index, 0);
+			}
+			print(state);
+			fprintf(stderr, "Score: %d\n", move[0]);
+			for (int i = 0; i < depth; i++) {
+				int val = move[i + 1];
+				if (val == -1) {
+					fprintf(stderr, "(pass)");
 				}
+				else {
+					fprintf(stderr, "%d ", val);
+					if (val >= 288)
+						val -= 288;
+					while (val != 0) {
+						fprintf(stderr, "(%d,%d) ", (val % 288) % FIELD_WIDTH, (val % 288) / FIELD_WIDTH);
+						val /= 288;
+					}
+				}
+				fprintf(stderr, "\n");
+			}
+			fflush(stdout);
+			free(move);
+			for (int i = 0; i < depth; i++)
+				free_state(&predictions[i]);
+			free(predictions);
+			t = clock() - t;
+			fprintf(stderr, "Time: %fms\n", (double)t / CLOCKS_PER_SEC * 1000.0);
+			/*
+			extern int count[8][8];
+			for (int y=0; y<8; y++){
+				for (int x=0; x<8; x++){
+					fprintf(stderr, "%d ", count[x][y]);
+				}
+				fprintf(stderr, "\n");
 			}
 			fprintf(stderr, "\n");
+			*/
+			//free_state(&state);
+			//state = instantiate_state();
+			your_botid = !your_botid;
+			struct State *new_state = simulate(state);
+			free_state(&state);
+			state = new_state;
 		}
-		fflush(stdout);
-		free(move);
-		for (int i = 0; i < depth; i++)
-			free_state(&predictions[i]);
-		free(predictions);
-		t = clock() - t;
-		fprintf(stderr, "Time: %fms\n", (double)t / CLOCKS_PER_SEC * 1000.0);
-		/*
-		extern int count[8][8];
-		for (int y=0; y<8; y++){
-			for (int x=0; x<8; x++){
-				fprintf(stderr, "%d ", count[x][y]);
-			}
-			fprintf(stderr, "\n");
-		}
-		fprintf(stderr, "\n");
-		*/
-		free_state(&state);
-		state = instantiate_state();
 	}
 	else if (strstr(buffer, "update") != NULL) {
 		if (strstr(buffer, "field") != NULL) {
